@@ -21,4 +21,7 @@
    @test isa(img2, AbstractArray{<:Color,2})
    @test all(img1 .== img2)
 
+   # Other
+   @test display(allcolormaps) != NaN
+
 ## ---

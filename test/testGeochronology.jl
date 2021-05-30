@@ -23,4 +23,6 @@
     @test fobj.slope_sigma ≈ 0.0035683808205783673
     @test fobj.mswd ≈ 1.1419901440278089
 
+    @test display(fobj) != NaN
+
 ## ---
