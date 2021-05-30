@@ -4,6 +4,7 @@ module StatGeochemBase
     @reexport using NaNStatistics
 
     using LoopVectorization
+    using Interpolations
     include("ArrayStats.jl")
 
 end
