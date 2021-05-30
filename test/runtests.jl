@@ -1,6 +1,4 @@
 using StatGeochemBase
 using Test
 
-@testset "StatGeochemBase.jl" begin
-    # Write your tests here.
-end
+@testset "ArrayStats" begin include("testArrayStats.jl") end
