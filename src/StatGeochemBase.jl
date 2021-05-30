@@ -12,6 +12,7 @@ module StatGeochemBase
     import SpecialFunctions.erf
     erf(x::Vec) = VectorizationBase.verf(x)
     include("Math.jl")
+    include("Geochronology.jl")
 
     using Interpolations
     include("ArrayStats.jl")
@@ -20,5 +21,8 @@ module StatGeochemBase
     using Colors: Color, RGBX, RGB, N0f8
     include("Images.jl")
     include("Colormaps.jl")
+
+    import Base.display
+    include("Display") # Custom pretty-printing
 
 end
