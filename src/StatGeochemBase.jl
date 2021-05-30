@@ -1,5 +1,5 @@
 module StatGeochemBase
 
-# Write your package code here.
+    @reexport using NaNStatistics
 
 end
