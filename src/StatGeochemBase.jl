@@ -11,11 +11,14 @@ module StatGeochemBase
     using SpecialFunctions
     import SpecialFunctions.erf
     erf(x::Vec) = VectorizationBase.verf(x)
-
-    # Other dependencies
-    using Interpolations
-
     include("Math.jl")
+
+    using Interpolations
     include("ArrayStats.jl")
+
+    using IndirectArrays: IndirectArray
+    using Colors: Color, RGBX, RGB, N0f8
+    include("Images.jl")
+    include("Colormaps.jl")
 
 end
