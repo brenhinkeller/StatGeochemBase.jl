@@ -23,6 +23,6 @@ module StatGeochemBase
     include("Colormaps.jl")
 
     import Base.display
-    include("Display") # Custom pretty-printing
+    include("Display.jl") # Custom pretty-printing
 
 end
