@@ -5,7 +5,7 @@
 
 A common base of statistical, geochemical, and geochronological functions as used in, e.g., [Chron.jl](https://github.com/brenhinkeller/Chron.jl) and [StatGeochem.jl](https://github.com/brenhinkeller/StatGeochem.jl)
 
-Reexports [NaNStatistics.jl](https://github.com/brenhinkeller/NaNStatistics.jl)
+Depends heavily upon [NaNStatistics.jl](https://github.com/brenhinkeller/NaNStatistics.jl) for NaN-ignoring summary statistics, histograms, and binning.
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://brenhinkeller.github.io/StatGeochemBase.jl/stable/
