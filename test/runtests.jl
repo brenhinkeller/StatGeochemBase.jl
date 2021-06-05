@@ -1,4 +1,5 @@
 using StatGeochemBase
+using NaNStatistics
 using Test
 
 @testset "Math" begin include("testMath.jl") end
