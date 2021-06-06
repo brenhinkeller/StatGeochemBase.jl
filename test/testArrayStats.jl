@@ -26,4 +26,13 @@
     @test isapprox(nanmean(A), 0.5, atol=0.08)
     @test isapprox(nanstd(A), sqrt(1/12), atol=0.08)
 
+    # Strings
+    @test contains("JuliaLang is pretty cool!", "Julia")
+    @test !contains("JuliaLang is pretty cool!", "julia")
+
+    @test containsi("JuliaLang is pretty cool!", "Julia")
+    @test containsi("JuliaLang is pretty cool!", "julia")
+    @test !containsi("JuliaLang is pretty cool!", "tomatoes")
+
+
 ## ---
