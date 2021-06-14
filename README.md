@@ -13,5 +13,5 @@ Depends heavily upon [NaNStatistics.jl](https://github.com/brenhinkeller/NaNStat
 [docs-dev-url]: https://brenhinkeller.github.io/StatGeochemBase.jl/dev/
 [ci-img]: https://github.com/brenhinkeller/StatGeochemBase.jl/workflows/CI/badge.svg
 [ci-url]: https://github.com/brenhinkeller/StatGeochemBase.jl/actions?query=workflow%3ACI
-[codecov-img]: http://codecov.io/github/brenhinkeller/StatGeochemBase.jl/coverage.svg?branch=main
+[codecov-img]: https://codecov.io/gh/brenhinkeller/StatGeochemBase.jl/branch/main/graph/badge.svg
 [codecov-url]: http://codecov.io/github/brenhinkeller/StatGeochemBase.jl?branch=main
