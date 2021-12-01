@@ -270,7 +270,7 @@
         violets,
         purples,
         magentas,
-        lines,
-        cubehelix
+        cubehelix,
+        lines
     )
     export colormaps
