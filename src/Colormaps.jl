@@ -97,7 +97,8 @@
     violets = linterp1(1:3, parse.(Color, ["#FFFFFF", "#8000F0", "#000000",]), color_x)
     purples = linterp1(1:3, parse.(Color, ["#FFFFFF", "#800080", "#000000",]), color_x)
     magentas = linterp1(1:3, parse.(Color, ["#FFFFFF", "#F00080", "#000000",]), color_x)
-    export reds, oranges, greens, cyans, blues, violets, purples, magentas
+    grays = linterp1(1:2, parse.(Color, ["#FFFFFF", "#000000",]), color_x)
+    export reds, oranges, greens, cyans, blues, violets, purples, magentas, grays
 
     # Consistent mineral color dictionary
     mineralcolors=Dict{String,Color}()
@@ -241,6 +242,7 @@
         violets
         purples
         magentas
+        grays
         cubehelix
         lines
     end
@@ -270,6 +272,7 @@
         violets,
         purples,
         magentas,
+        grays,
         cubehelix,
         lines
     )
