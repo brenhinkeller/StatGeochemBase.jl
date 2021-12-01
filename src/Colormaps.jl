@@ -262,7 +262,6 @@
         ylcn,
         water,
         fire,
-        cubehelix,
         reds,
         oranges,
         greens,
@@ -271,6 +270,7 @@
         violets,
         purples,
         magentas,
-        lines
+        lines,
+        cubehelix
     )
     export colormaps
