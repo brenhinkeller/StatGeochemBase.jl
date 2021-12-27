@@ -1,6 +1,6 @@
 ## --- Simple linear interpolations
 
-    function _linterp1(x, y, xq::Number)
+    function _linterp1(x, y, xq::Number, ::Symbol)
         knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
         𝔦₋ = min(max(knot_index, firstindex(x)), lastindex(x) - 1)
         𝔦₊ = 𝔦₋ + 1
@@ -10,11 +10,30 @@
         return f*y₊ + (1-f)*y₋
     end
 
-    function _linterp1(x, y, xq::AbstractArray; extrapolation=NaN)
+    function _linterp1(x, y, xq::AbstractArray, ::Symbol)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst_vec(x, xq) .- 1
         T = Base.promote_op(*, eltype(y), Float64)
-        yq = similar(y, T, size(xq))
+        yq = similar(xq, T, size(xq))
+        @inbounds for i=1:length(knot_index)
+            knot_index[i] = min(max(knot_index[i], i₁), iₙ)
+        end
+        @inbounds for i=1:length(knot_index)
+            𝔦₋ = knot_index[i]
+            𝔦₊ = 𝔦₋ + 1
+            x₋, x₊ = x[𝔦₋], x[𝔦₊]
+            y₋, y₊ = y[𝔦₋], y[𝔦₊]
+            f = (xq[i] - x₋)/(x₊ - x₋)
+            yq[i] = f*y₊ + (1-f)*y₋
+        end
+        return yq
+    end
+
+    function _linterp1(x, y, xq::AbstractArray{<:AbstractFloat}, ::Symbol)
+        i₁, iₙ = firstindex(x), lastindex(x) - 1
+        knot_index = searchsortedfirst_vec(x, xq) .- 1
+        T = Base.promote_op(*, eltype(y), Float64)
+        yq = similar(xq, T, size(xq))
         @turbo for i=1:length(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
         end
@@ -29,6 +48,42 @@
         return yq
     end
 
+    function _linterp1(x, y, xq::Number, extrapolate::Number)
+        i₁, iₙ = firstindex(x), lastindex(x) - 1
+        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
+        T = Base.promote_op(*, eltype(y), Float64)
+        if 𝔦₋ <= knot_index <= iₙ
+            𝔦₋ = knot_index
+            𝔦₊ = 𝔦₋ + 1
+            x₋, x₊ = x[𝔦₋], x[𝔦₊]
+            y₋, y₊ = y[𝔦₋], y[𝔦₊]
+            f = (xq - x₋) / (x₊ - x₋)
+            return f*y₊ + (1-f)*y₋
+        else
+            return T(extrapolate)
+        end
+    end
+
+    function _linterp1(x, y, xq::AbstractArray, extrapolate::Number)
+        i₁, iₙ = firstindex(x), lastindex(x) - 1
+        knot_index = searchsortedfirst_vec(x, xq) .- 1
+        T = Base.promote_op(*, eltype(y), Float64)
+        yq = similar(xq, T, size(xq))
+        @inbounds for i=1:length(knot_index)
+            𝔦 = knot_index[i]
+            if 𝔦₋ <= 𝔦 <= iₙ
+                𝔦₋ = 𝔦
+                𝔦₊ = 𝔦₋ + 1
+                x₋, x₊ = x[𝔦₋], x[𝔦₊]
+                y₋, y₊ = y[𝔦₋], y[𝔦₊]
+                f = (xq[i] - x₋)/(x₊ - x₋)
+                yq[i] = f*y₊ + (1-f)*y₋
+            else
+                yq[i] = extrapolate
+            end
+        end
+        return yq
+    end
 
     # Vectorization-friendly searchsortedfirst implementation from Interpolations.jl
     # https://github.com/JuliaMath/Interpolations.jl
@@ -65,21 +120,22 @@
         return out
     end
 
+
 ## --- Linear interpolation, top-level functions
 
     # Linear interpolation, finding the interpolated `y` value corresponding to the queried `x` values `xq`
     # Knots (`x`-values) must be sorted
-    function linterp1(x::AbstractArray, y::AbstractArray, xq)
+    function linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
-        return _linterp1(x, y, xq)
+        return _linterp1(x, y, xq, extrapolate)
     end
     export linterp1
 
     # Linear interpolation, finding the interpolated `y` value corresponding to the queried `x` values `xq`
     # Knots will be sorted, along with `y` values, if they are not already
-    function linterp1s(x::AbstractArray, y::AbstractArray, xq)
+    function linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         sI = sortperm(x) # indices to construct sorted array
-        return _linterp1(x[sI], y[sI], xq)
+        return _linterp1(x[sI], y[sI], xq, extrapolate)
     end
     export linterp1s
 
