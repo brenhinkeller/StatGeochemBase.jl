@@ -90,7 +90,7 @@
             𝔦₋ = floor(Int, i)
             𝔦₊ = 𝔦₋ + 1
             f = i - 𝔦₋
-            return f*y[𝔦₊] + (1-f)*y[𝔦₋])
+            return f*y[𝔦₊] + (1-f)*y[𝔦₋]
         else
             return outboundsval
         end
