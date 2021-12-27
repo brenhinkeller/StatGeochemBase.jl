@@ -13,11 +13,11 @@ module StatGeochemBase
     include("Math.jl")
     include("Geochronology.jl")
 
+    using Colors: Color, RGBX, RGB, N0f8
     include("Interpolations.jl")
     include("ArrayStats.jl")
 
     using IndirectArrays: IndirectArray
-    using Colors: Color, RGBX, RGB, N0f8
     include("Images.jl")
     include("Colormaps.jl")
 
