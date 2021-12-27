@@ -165,7 +165,7 @@
 
 
     # Linearly interpolate vector y at index i, returning outboundsval if outside of bounds
-    function linterp_at_index(y::AbstractArray, i::Number; extrapolate=float(eltype(y))(NaN))
+    function linterp_at_index(y::AbstractArray, i::Number, extrapolate=float(eltype(y))(NaN))
         if firstindex(y) <= i < lastindex(y)
             𝔦₋ = floor(Int, i)
             𝔦₊ = 𝔦₋ + 1
