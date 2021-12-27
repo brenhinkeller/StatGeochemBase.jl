@@ -29,7 +29,7 @@
         return yq
     end
 
-    function _linterp1(x, y, xq::AbstractArray{<:AbstractFloat}, ::Symbol)
+    function _linterp1(x, y::AbstractArray{<:AbstractFloat}, xq::AbstractArray, ::Symbol)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst_vec(x, xq) .- 1
         T = Base.promote_op(*, eltype(y), Float64)
@@ -52,7 +52,7 @@
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
         T = Base.promote_op(*, eltype(y), Float64)
-        if 𝔦₋ <= knot_index <= iₙ
+        if i₁ <= knot_index <= iₙ
             𝔦₋ = knot_index
             𝔦₊ = 𝔦₋ + 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
@@ -71,7 +71,7 @@
         yq = similar(xq, T, size(xq))
         @inbounds for i=1:length(knot_index)
             𝔦 = knot_index[i]
-            if 𝔦₋ <= 𝔦 <= iₙ
+            if i₁ <= 𝔦 <= iₙ
                 𝔦₋ = 𝔦
                 𝔦₊ = 𝔦₋ + 1
                 x₋, x₊ = x[𝔦₋], x[𝔦₊]
@@ -141,18 +141,17 @@
 
 
     # Linearly interpolate vector y at index i, returning outboundsval if outside of bounds
-    function linterp_at_index(y::AbstractArray, i::Number, outboundsval=float(eltype(y))(NaN))
+    function linterp_at_index(y::AbstractArray, i::Number; extrapolate=float(eltype(y))(NaN))
         if firstindex(y) <= i < lastindex(y)
             𝔦₋ = floor(Int, i)
             𝔦₊ = 𝔦₋ + 1
             f = i - 𝔦₋
             return f*y[𝔦₊] + (1-f)*y[𝔦₋]
         else
-            return outboundsval
+            return extrapolate
         end
     end
     export linterp_at_index
-
 
 
 ## --- Resize and interpolate arrays of colors

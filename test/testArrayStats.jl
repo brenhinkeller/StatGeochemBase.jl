@@ -10,9 +10,6 @@
     @test findnth(fill(true,50), 25) == 25
 
     # Interpolation
-    @test linterp1(1:10,21:30,5:0.5:6) == [25.0, 25.5, 26.0]
-    @test linterp1s(10:-1:1,21:30,5:0.5:6) == [26.0, 25.5, 25.0]
-    @test linterp_at_index(1:100,10) == 10
     @test cntr(0:2:100) == 1:2:99
 
     # Integration
