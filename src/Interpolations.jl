@@ -13,7 +13,8 @@
     function _linterp1(x, y, xq::AbstractArray, ::Symbol)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst_vec(x, xq) .- 1
-        T = Base.promote_op(*, eltype(y), Float64)
+        Tₓ = promote_type(eltype(x), eltype(xq))
+        T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         yq = similar(xq, T, size(xq))
         @inbounds for i=1:length(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
@@ -32,7 +33,8 @@
     function _linterp1(x, y::AbstractArray{<:AbstractFloat}, xq::AbstractArray, ::Symbol)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst_vec(x, xq) .- 1
-        T = Base.promote_op(*, eltype(y), Float64)
+        Tₓ = promote_type(eltype(x), eltype(xq))
+        T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         yq = similar(xq, T, size(xq))
         @turbo for i=1:length(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
@@ -51,7 +53,8 @@
     function _linterp1(x, y, xq::Number, extrapolate::Number)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
-        T = Base.promote_op(*, eltype(y), Float64)
+        Tₓ = promote_type(eltype(x), eltype(xq))
+        T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         if i₁ <= knot_index <= iₙ
             𝔦₋ = knot_index
             𝔦₊ = 𝔦₋ + 1
@@ -67,7 +70,8 @@
     function _linterp1(x, y, xq::AbstractArray, extrapolate::Number)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         knot_index = searchsortedfirst_vec(x, xq) .- 1
-        T = Base.promote_op(*, eltype(y), Float64)
+        Tₓ = promote_type(eltype(x), eltype(xq))
+        T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         yq = similar(xq, T, size(xq))
         @inbounds for i=1:length(knot_index)
             𝔦 = knot_index[i]
