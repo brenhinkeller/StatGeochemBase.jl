@@ -194,7 +194,7 @@
         end
         return ll
     end
-    function normpdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
+    function normcdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
         @inbounds for i=1:length(x)
             xₛ = (x[i] - mu[i]) / sigma[i]

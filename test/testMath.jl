@@ -17,13 +17,18 @@
     @test normpdf_ll.(0,1,-5:5) == -(-5:5).^2/2
     r = collect(-5:5)
     @test normpdf_ll(0,1,r) == normpdf_ll(0,ones(11),r) == normpdf_ll(zeros(11),ones(11),r) == sum(normpdf_ll.(0,1,r))
-    @test normpdf_ll(ones(10),1,collect(1:10)) == normpdf_ll(collect(1:10),1,ones(10))
+    @test normpdf_ll(ones(10),1,collect(1:10)) == normpdf_ll(collect(1:10),1,ones(10)) # Test for symmetry
 
     @test normcdf(1,1,1) == 0.5
     result = zeros(5)
     normcdf!(result, 0, 1, -2:2)
     @test result ≈ normcdf(0,1,-2:2) ≈ normcdf.(0,1,-2:2) ≈ [0.02275013194817921, 0.15865525393145707, 0.5, 0.8413447460685429, 0.9772498680518208]
     @test normcdf.(1:10, 1:10, 1:10) == normcdf(collect.((1:10, 1:10, 1:10))...) == fill(0.5, 10)
+
+    @test normcdf_ll.(0,1,-5:5) ≈ [-15.064998393988725, -10.360101486527292, -6.607726221510349, -3.7831843336820317, -1.841021645009264, -0.6931471805599453, -0.17275377902344985, -0.023012909328963486, -0.0013508099647481923, -3.1671743377489226e-5, -2.866516129637633e-7]
+    r = collect(-5:5)
+    @test normcdf_ll(0,1,r) == normcdf_ll(0,ones(11),r) == normcdf_ll(zeros(11),ones(11),r) == sum(normcdf_ll.(0,1,r))
+    @test normcdf_ll(zeros(10),1,collect(1:10)) ==  normcdf_ll(-collect(1:10),1,zeros(10)) # Test for symmetry
 
     @test normproduct(0,1,0,1) === normpdf(0,sqrt(2),0) === 0.28209479177387814
     @test normproduct_ll(0,1,0,1) === normpdf_ll(0,1,0) === 0.0
