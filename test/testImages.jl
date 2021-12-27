@@ -22,6 +22,6 @@
    @test all(img1 .== img2)
 
    # Other
-   @test display(colormaps) != NaN
+   #@test display(colormaps) != NaN
 
 ## ---
