@@ -60,6 +60,7 @@
 
     const SQRT2 = sqrt(2)
     const SQRT2PI = sqrt(2*pi)
+    const INVSQRT2 = 1/sqrt(2)
     const AN = Union{AbstractArray{<:Number},Number}
 
 ## --- Gaussian distribution functions
@@ -75,16 +76,17 @@
     with mean `mu` and standard deviation `sigma`, evaluated at `x`
     """
     @inline normpdf(mu,sigma,x) = exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
-    @inline normpdf(mu::AN,sigma::AN,x::AN) = @turbo @. exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
     @inline normpdf(mu::Number,sigma::Number,x::Number) = exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
+    normpdf(mu::AN,sigma::AN,x::AN) = @turbo @. exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
     export normpdf
 
     """
     ```julia
     normpdf_ll(mu, sigma, x)
     ```
-    Fast log likelihood corresponding to a Normal (Gaussian) distribution
-    with mean `mu` and standard deviation `sigma`, evaluated at `x`.
+    Fast log likelihood corresponding to the natural logarithm of the probability
+    density function of a Normal (Gaussian) distribution with mean `mu` and
+    standard deviation `sigma`, evaluated at `x`.
 
     If `x`, [`mu`, and `sigma`] are given as arrays, the sum of the log likelihood
     over all `x` will be returned.
@@ -130,7 +132,7 @@
     ```julia
     normcdf(mu,sigma,x)
     ```
-    Cumulative density function of the Normal (Gaussian) distribution
+    Cumulative distribution function of the Normal (Gaussian) distribution
 
     ``1/2 + erf(\frac{x-μ}{σ√2})/2``
 
@@ -138,8 +140,69 @@
     """
     @inline normcdf(mu,sigma,x) = 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
     @inline normcdf(mu::Number,sigma::Number,x::Number) = 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
-    @inline normcdf(mu::AN,sigma::AN,x::AN) = @turbo @. 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
+    normcdf(mu::AN,sigma::AN,x::AN) = @turbo @. 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
     export normcdf
+
+
+    """
+    ```julia
+    normcdf_ll(mu, sigma, x)
+    ```
+    Fast log likelihood corresponding to the natural logarithm of the cumulative
+    distribution function of a Normal (Gaussian) distribution with mean `mu` and
+    standard deviation `sigma`, evaluated at `x`.
+
+    If `x`, [`mu`, and `sigma`] are given as arrays, the sum of the log likelihood
+    over all `x` will be returned.
+
+    See also `normcdf`
+    """
+    @inline function normcdf_ll(xₛ::Number)
+        if xₛ < -1.0
+            return log(0.5*erfcx(-xₛ * INVSQRT2)) - 0.5*abs2(xₛ)
+        else
+            return log1p(-0.5*erfc(xₛ * INVSQRT2))
+        end
+    end
+    @inline function normcdf_ll(mu::Number, sigma::Number, x::Number)
+        xₛ = (x - mu) / sigma
+        return normcdf_ll(xₛ)
+    end
+    function normcdf_ll(mu::Number,sigma::Number,x::AbstractArray)
+        inv_sigma = 1/sigma
+        ll = zero(typeof(inv_sigma))
+        @inbounds for i=1:length(x)
+            xₛ = (x[i] - mu) * inv_sigma
+            ll += normcdf_ll(xₛ)
+        end
+        return ll
+    end
+    function normcdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
+        inv_sigma = 1/sigma
+        ll = zero(typeof(inv_sigma))
+        @inbounds for i=1:length(x)
+            xₛ = (x[i] - mu[i]) * inv_sigma
+            ll += normcdf_ll(xₛ)
+        end
+        return ll
+    end
+    function normcdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
+        ll = zero(float(eltype(sigma)))
+        @inbounds for i=1:length(x)
+            xₛ = (x[i] - mu) / sigma[i]
+            ll += normcdf_ll(xₛ)
+        end
+        return ll
+    end
+    function normpdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
+        ll = zero(float(eltype(sigma)))
+        @inbounds for i=1:length(x)
+            xₛ = (x[i] - mu[i]) / sigma[i]
+            ll += normcdf_ll(xₛ)
+        end
+        return ll
+    end
+    export normcdf_ll
 
 
     """
