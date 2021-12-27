@@ -1,26 +1,3 @@
-## --- Resize and interpolate arrays of colors
-
-    # Linearly interpolate array of colors at positions xq
-    function linterp1(x::AbstractArray, image::AbstractArray{<:Color}, xq)
-        # Interpolate red, green, and blue vectors separately
-        r_interp = linterp1(x, image .|> c -> c.r, xq)
-        g_interp = linterp1(x, image .|> c -> c.g, xq)
-        b_interp = linterp1(x, image .|> c -> c.b, xq)
-        # Convert back to a color
-        return RGB.(r_interp,g_interp,b_interp)
-    end
-
-    function resize_colormap(cmap::AbstractArray{<:Color}, n::Integer)
-        cNum = length(cmap)
-        if n<2
-            cmap[1:1]
-        else
-            linterp1(1:cNum,cmap,collect(range(1,cNum,length=n)))
-        end
-    end
-    export resize_colormap
-
-
 ## --- Map colormaps to images
 
     # Convert matrix to image using colormap

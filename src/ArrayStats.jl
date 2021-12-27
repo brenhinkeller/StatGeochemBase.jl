@@ -24,7 +24,7 @@
     export count_unique!
 
 
-## --- Interpolating arrays
+## --- Convert between bin centers and bin edges
 
     """
     ```julia
@@ -37,37 +37,6 @@
         return centers
     end
     export cntr
-
-    # Linearly interpolate vector y at index i, returning outboundsval if outside of bounds
-    function linterp_at_index(y::AbstractArray, i::Number, outboundsval=float(eltype(y))(NaN))
-        if i > 1 && i < length(y)
-            i_below = floor(Int, i)
-            i_above = i_below + 1
-            f = i - i_below
-            return @inbounds Float64(f*y[i_above] + (1-f)*y[i_below])
-        else
-            return Float64(outboundsval)
-        end
-    end
-    export linterp_at_index
-
-    # Interpolate y-value at xq
-    # Linear interpolation, sorting inputs
-    function linterp1(x,y,xq; extrapolate=Line())
-        itp = LinearInterpolation(x,y, extrapolation_bc=extrapolate)
-        yq = itp(xq) # Interpolate value of y at queried x values
-        return yq
-    end
-    export linterp1
-
-    # Sort x and interpolate y-value at xq
-    function linterp1s(x,y,xq; extrapolate=Line())
-        sI = sortperm(x) # indices to construct sorted array
-        itp = LinearInterpolation(x[sI], y[sI], extrapolation_bc=extrapolate)
-        yq = itp(xq) # Interpolate value of y at queried x values
-        return yq
-    end
-    export linterp1s
 
 
 ## --- Searching arrays

@@ -13,7 +13,7 @@ module StatGeochemBase
     include("Math.jl")
     include("Geochronology.jl")
 
-    using Interpolations
+    include("Interpolations.jl")
     include("ArrayStats.jl")
 
     using IndirectArrays: IndirectArray
