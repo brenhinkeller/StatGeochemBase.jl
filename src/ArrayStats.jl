@@ -282,7 +282,7 @@
     """
     function trapezoidalquadrature(edges::AbstractRange, values::AbstractArray)
         result = zero(eltype(values))
-        @avx for i = (firstindex(edges)+1):lastindex(edges)
+        @turbo for i = (firstindex(edges)+1):lastindex(edges)
             result += values[i-1]+values[i]
         end
         dx = (edges[end]-edges[1])/(length(edges) - 1)
@@ -290,7 +290,7 @@
     end
     function trapezoidalquadrature(edges::AbstractArray, values::AbstractArray)
         result = zero(promote_type(eltype(edges), eltype(values)))
-        @avx for i = (firstindex(edges)+1):lastindex(edges)
+        @turbo for i = (firstindex(edges)+1):lastindex(edges)
             result += (values[i-1] + values[i]) * (edges[i] - edges[i-1])
         end
         return result / 2

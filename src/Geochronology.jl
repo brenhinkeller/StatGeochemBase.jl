@@ -27,13 +27,13 @@
     #     n = length(x)
     #
     #     sum_of_values = sum_of_weights = χ2 = 0.0
-    #     @avx for i=1:n
+    #     @turbo for i=1:n
     #         sum_of_values += x[i] / (σ[i]*σ[i])
     #         sum_of_weights += 1 / (σ[i]*σ[i])
     #     end
     #     wx = sum_of_values / sum_of_weights
     #
-    #     @avx for i=1:n
+    #     @turbo for i=1:n
     #         χ2 += (x[i] - wx) * (x[i] - wx) / (σ[i] * σ[i])
     #     end
     #     mswd = χ2 / (n-1)
@@ -69,13 +69,13 @@
     # function gwmean(x::Array{<:Number}, σ::Array{<:Number})
     #     n = length(x)
     #     sum_of_values = sum_of_weights = χ2 = 0.0
-    #     @avx for i=1:n
+    #     @turbo for i=1:n
     #         sum_of_values += x[i] / (σ[i]*σ[i])
     #         sum_of_weights += 1 / (σ[i]*σ[i])
     #     end
     #     wx = sum_of_values / sum_of_weights
     #
-    #     @avx for i=1:n
+    #     @turbo for i=1:n
     #         χ2 += (x[i] - wx) * (x[i] - wx) / (σ[i] * σ[i])
     #     end
     #     mswd = χ2 / (n-1)
@@ -112,14 +112,14 @@
     #     sum_of_values = sum_of_weights = χ2 = 0.0
     #     n = length(x)
     #
-    #     @avx for i=1:n
+    #     @turbo for i=1:n
     #         w = 1 / (σ[i]*σ[i])
     #         sum_of_values += w * x[i]
     #         sum_of_weights += w
     #     end
     #     wx = sum_of_values / sum_of_weights
     #
-    #     @avx for i=1:n
+    #     @turbo for i=1:n
     #         χ2 += (x[i] - wx) * (x[i] - wx) / (σ[i] * σ[i])
     #     end
     #

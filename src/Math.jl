@@ -44,7 +44,7 @@
 ## --- Fast vectorized mean
     function _vmean(A::AbstractArray{T}, ::Colon) where T
         m = zero(T)
-        @avx for i ∈ eachindex(A)
+        @turbo for i ∈ eachindex(A)
             m += A[i]
         end
         return m / length(A)
@@ -75,7 +75,7 @@
     with mean `mu` and standard deviation `sigma`, evaluated at `x`
     """
     @inline normpdf(mu,sigma,x) = exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
-    @inline normpdf(mu::AN,sigma::AN,x::AN) = @avx @. exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
+    @inline normpdf(mu::AN,sigma::AN,x::AN) = @turbo @. exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
     @inline normpdf(mu::Number,sigma::Number,x::Number) = exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
     export normpdf
 
@@ -96,7 +96,7 @@
     function normpdf_ll(mu::Number,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @avx for i=1:length(x)
+        @turbo for i=1:length(x)
             ll -= (x[i]-mu)*(x[i]-mu) * inv_s2
         end
         return ll
@@ -104,21 +104,21 @@
     function normpdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @avx for i=1:length(x)
+        @turbo for i=1:length(x)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) * inv_s2
         end
         return ll
     end
     function normpdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @avx for i=1:length(x)
+        @turbo for i=1:length(x)
             ll -= (x[i]-mu)*(x[i]-mu) / (2*sigma[i]*sigma[i])
         end
         return ll
     end
     function normpdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @avx for i=1:length(x)
+        @turbo for i=1:length(x)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) / (2*sigma[i]*sigma[i])
         end
         return ll
@@ -138,7 +138,7 @@
     """
     @inline normcdf(mu,sigma,x) = 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
     @inline normcdf(mu::Number,sigma::Number,x::Number) = 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
-    @inline normcdf(mu::AN,sigma::AN,x::AN) = @avx @. 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
+    @inline normcdf(mu::AN,sigma::AN,x::AN) = @turbo @. 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
     export normcdf
 
 
@@ -151,7 +151,7 @@
     function normcdf!(result::Array, mu::Number, sigma::Number, x::AbstractArray)
         T = eltype(result)
         inv_sigma_sqrt2 = one(T)/(sigma*T(SQRT2))
-        @avx for i ∈ 1:length(x)
+        @turbo for i ∈ 1:length(x)
             result[i] = T(0.5) + T(0.5) * erf((x[i]-mu) * inv_sigma_sqrt2)
         end
         return result
