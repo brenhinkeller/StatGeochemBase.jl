@@ -10,6 +10,7 @@
     # Extrapolation
     @test linterp1(1:10, 1:10, 15) == 15 # Default is to extrapolate
     @test linterp1(1:10, 1:10, 15, extrapolate=-5) == -5
+    @test linterp1(1:10, 1:10, 5, extrapolate=-5) == 5
     @test isnan(linterp1(1:10, 1:10, 15, extrapolate=NaN))
     @test linterp1(1:10,1:10,0:11) == 0:11 # Default is to extrapolate
     @test linterp1(1:10,1:10,0:11, extrapolate=:Linear) == 0:11
