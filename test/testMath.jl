@@ -2,6 +2,12 @@
 
     @test isapprox(fast_inv_sqrt(5.0), 1/sqrt(5.0), atol=1e-6)
     @test isapprox(fast_inv_sqrt(5f0), 1/sqrt(5f0), atol=1e-6)
+    @test nearest(Int64, 3.3) === 3
+    @test nearest(Float64, 1//3) === 1/3
+
+## --- Linear regression
+
+    @test linreg(1:10, 1:10) ≈ [0, 1]
 
 ## --- Distributions
 
