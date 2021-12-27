@@ -132,6 +132,12 @@
     and values `y`, find the corresponding `y` values at position(s) `xq`.
 
     Knots `x` must be sorted in increasing order.
+
+    If the optional keyword argument `extrapolate` is set to `:Linear` (default),
+    `xq` values outside the range of `x` will be extrapolated using a linear
+    extrapolation of the closest two `x`-`y` pairs. Otherwise, if `extrapolate`
+    is set to a `Number` (e.g., `0`, or `NaN`), that number will be used
+    instead.
     """
     function linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
@@ -143,8 +149,8 @@
     ```julia
     yq = linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
     ```
-    As as `linterp1` (simple linear interpolation in one dimension) but will sort
-    the knots `x` and values `y` pairwise if `x` is not already sorted in
+    As as `linterp1` (simple linear interpolation in one dimension), but will sort
+    the knots `x` and values `y` pairwise if `x` if not already sorted in
     increasing order.
     """
     function linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
