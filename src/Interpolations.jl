@@ -123,16 +123,30 @@
 
 ## --- Linear interpolation, top-level functions
 
-    # Linear interpolation, finding the interpolated `y` value corresponding to the queried `x` values `xq`
-    # Knots (`x`-values) must be sorted
+
+    """
+    ```julia
+    yq = linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    ```
+    Simple linear interpolation in one dimension. Given a vector of knots `x`
+    and values `y`, find the corresponding `y` values at position(s) `xq`.
+
+    Knots `x` must be sorted in increasing order.
+    """
     function linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
         return _linterp1(x, y, xq, extrapolate)
     end
     export linterp1
 
-    # Linear interpolation, finding the interpolated `y` value corresponding to the queried `x` values `xq`
-    # Knots will be sorted, along with `y` values, if they are not already
+    """
+    ```julia
+    yq = linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    ```
+    As as `linterp1` (simple linear interpolation in one dimension) but will sort
+    the knots `x` and values `y` pairwise if `x` is not already sorted in
+    increasing order.
+    """
     function linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         sI = sortperm(x) # indices to construct sorted array
         return _linterp1(x[sI], y[sI], xq, extrapolate)
