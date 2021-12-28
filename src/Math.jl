@@ -164,6 +164,13 @@
             return log1p(-0.5*erfc(xₛ * INVSQRT2))
         end
     end
+    function normcdf_ll(xₛ::AbstractArray)
+        ll = zero(float(eltype(xₛ)))
+        @inbounds for i ∈ xₛ
+            ll += normcdf_ll(xₛ)
+        end
+        return ll
+    end
     @inline function normcdf_ll(mu::Number, sigma::Number, x::Number)
         xₛ = (x - mu) / sigma
         return normcdf_ll(xₛ)
