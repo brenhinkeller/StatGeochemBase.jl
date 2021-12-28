@@ -180,7 +180,7 @@
     """
     function findnth(t::AbstractArray{Bool}, n::Integer)
         N = 0
-        @inbounds for i=1:length(t)
+        @inbounds for i ∈ eachindex(t)
             if t[i]
                 N += 1
             end
@@ -250,7 +250,7 @@
         dist_ymax = maximum(dist)
         dist_xmax = prevfloat(length(dist) - 1.0)
 
-        @inbounds for i=1:length(x)
+        @inbounds for i ∈ eachindex(x)
             while true
                 # Pick random x value
                 rx = rand(eltype(x)) * dist_xmax

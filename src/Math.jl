@@ -98,7 +98,7 @@
     function normpdf_ll(mu::Number,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @turbo for i=1:length(x)
+        @turbo for i ∈ eachindex(x)
             ll -= (x[i]-mu)*(x[i]-mu) * inv_s2
         end
         return ll
@@ -106,21 +106,21 @@
     function normpdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @turbo for i=1:length(x)
+        @turbo for i ∈ eachindex(x)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) * inv_s2
         end
         return ll
     end
     function normpdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @turbo for i=1:length(x)
+        @turbo for i ∈ eachindex(x)
             ll -= (x[i]-mu)*(x[i]-mu) / (2*sigma[i]*sigma[i])
         end
         return ll
     end
     function normpdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @turbo for i=1:length(x)
+        @turbo for i ∈ eachindex(x)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) / (2*sigma[i]*sigma[i])
         end
         return ll
@@ -166,7 +166,7 @@
     end
     function normcdf_ll(xₛ::AbstractArray)
         ll = zero(float(eltype(xₛ)))
-        @inbounds for i ∈ xₛ
+        @inbounds for i ∈ eachindex(xₛ)
             ll += normcdf_ll(xₛ)
         end
         return ll
@@ -178,7 +178,7 @@
     function normcdf_ll(mu::Number,sigma::Number,x::AbstractArray)
         inv_sigma = 1/sigma
         ll = zero(typeof(inv_sigma))
-        @inbounds for i=1:length(x)
+        @inbounds for i ∈ eachindex(x)
             xₛ = (x[i] - mu) * inv_sigma
             ll += normcdf_ll(xₛ)
         end
@@ -187,7 +187,7 @@
     function normcdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_sigma = 1/sigma
         ll = zero(typeof(inv_sigma))
-        @inbounds for i=1:length(x)
+        @inbounds for i ∈ eachindex(x)
             xₛ = (x[i] - mu[i]) * inv_sigma
             ll += normcdf_ll(xₛ)
         end
@@ -195,7 +195,7 @@
     end
     function normcdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @inbounds for i=1:length(x)
+        @inbounds for i ∈ eachindex(x)
             xₛ = (x[i] - mu) / sigma[i]
             ll += normcdf_ll(xₛ)
         end
@@ -203,7 +203,7 @@
     end
     function normcdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @inbounds for i=1:length(x)
+        @inbounds for i ∈ eachindex(x)
             xₛ = (x[i] - mu[i]) / sigma[i]
             ll += normcdf_ll(xₛ)
         end
@@ -307,7 +307,7 @@
 
         # Check how many times a line projected right along x-axis from point intersects the polygon
         intersections = 0
-        @inbounds for i=1:length(x)
+        @inbounds for i ∈ eachindex(x)
             # Recycle our vertex
             x_last = copy(x_here)
             y_last = copy(y_here)
