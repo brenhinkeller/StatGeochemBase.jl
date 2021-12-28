@@ -30,6 +30,9 @@
     @test normcdf_ll(r) ≈ -38.54732871798976
     @test normcdf_ll(r) == normcdf_ll(0,1,r) == normcdf_ll(0,ones(11),r) == normcdf_ll(zeros(11),ones(11),r) == sum(normcdf_ll.(0,1,r))
     @test normcdf_ll(zeros(10),1,collect(1:10)) ==  normcdf_ll(-collect(1:10),1,zeros(10)) ≈ -0.19714945770002004 # Test for symmetry
+    @test normcdf_ll!(float.(r)) ≈ -38.54732871798976
+    @test normcdf_ll!(float.(r)) == normcdf_ll!(0,1,float.(r)) == normcdf_ll!(0,ones(11),float.(r)) == normcdf_ll!(zeros(11),ones(11),float.(r))
+    @test normcdf_ll!(zeros(10),1,collect(1:10.)) == normcdf_ll!(-collect(1:10),1,zeros(10)) ≈ -0.19714945770002004 # Test for symmetry
 
     @test normproduct(0,1,0,1) === normpdf(0,sqrt(2),0) === 0.28209479177387814
     @test normproduct_ll(0,1,0,1) === normpdf_ll(0,1,0) === 0.0

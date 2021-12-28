@@ -214,6 +214,74 @@
 
     """
     ```julia
+    normcdf_ll!(mu, sigma, x)
+    ```
+    Fast log likelihood corresponding to the natural logarithm of the cumulative
+    distribution function of a Normal (Gaussian) distribution with mean `mu` and
+    standard deviation `sigma`, evaluated at `x`.
+
+    As `normcdf_ll`, but in-place (using `x` as a buffer).
+    """
+    function normcdf_ll!(xₛ::AbstractArray)
+        @inbounds for i ∈ eachindex(xₛ)
+            xₛ[i] = normcdf_ll(xₛ[i])
+        end
+        ll = zero(float(eltype(xₛ)))
+        @turbo for i ∈ eachindex(xₛ)
+            ll += xₛ[i]
+        end
+        return ll
+    end
+    function normcdf_ll!(mu::Number,sigma::Number,x::AbstractArray)
+        inv_sigma = 1/sigma
+        @inbounds for i ∈ eachindex(x)
+            xₛ = (x[i] - mu) * inv_sigma
+            x[i] = normcdf_ll(xₛ)
+        end
+        ll = zero(typeof(inv_sigma))
+        @turbo for i ∈ eachindex(x)
+            ll += x[i]
+        end
+        return ll
+    end
+    function normcdf_ll!(mu::AbstractArray,sigma::Number,x::AbstractArray)
+        inv_sigma = 1/sigma
+        @inbounds for i ∈ eachindex(x)
+            xₛ = (x[i] - mu[i]) * inv_sigma
+            x[i] = normcdf_ll(xₛ)
+        end
+        ll = zero(typeof(inv_sigma))
+        @turbo for i ∈ eachindex(x)
+            ll += x[i]
+        end
+        return ll
+    end
+    function normcdf_ll!(mu::Number,sigma::AbstractArray,x::AbstractArray)
+        @inbounds for i ∈ eachindex(x)
+            xₛ = (x[i] - mu) / sigma[i]
+            x[i] = normcdf_ll(xₛ)
+        end
+        ll = zero(float(eltype(sigma)))
+        @turbo for i ∈ eachindex(x)
+            ll += x[i]
+        end
+        return ll
+    end
+    function normcdf_ll!(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
+        @inbounds for i ∈ eachindex(x)
+            xₛ = (x[i] - mu[i]) / sigma[i]
+            x[i] = normcdf_ll(xₛ)
+        end
+        ll = zero(float(eltype(sigma)))
+        @turbo for i ∈ eachindex(x)
+            ll += x[i]
+        end
+        return ll
+    end
+    export normcdf_ll!
+
+    """
+    ```julia
     normcdf!(result,mu,sigma,x)
     ```
     In-place version of `normcdf`
