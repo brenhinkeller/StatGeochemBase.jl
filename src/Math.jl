@@ -167,7 +167,7 @@
     function normcdf_ll(xₛ::AbstractArray)
         ll = zero(float(eltype(xₛ)))
         @inbounds for i ∈ eachindex(xₛ)
-            ll += normcdf_ll(xₛ)
+            ll += normcdf_ll(xₛ[i])
         end
         return ll
     end
