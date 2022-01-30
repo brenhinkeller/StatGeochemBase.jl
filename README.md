@@ -3,9 +3,9 @@
 [![Build Status][ci-img]][ci-url]
 [![codecov.io][codecov-img]][codecov-url]
 
-A common set of statistical, geochemical, and geochronological functions as used in, e.g., [Chron.jl](https://github.com/brenhinkeller/Chron.jl) and [StatGeochem.jl](https://github.com/brenhinkeller/StatGeochem.jl)
+A set of statistical, geochemical, and geochronological functions common to [Chron.jl](https://github.com/brenhinkeller/Chron.jl) and [StatGeochem.jl](https://github.com/brenhinkeller/StatGeochem.jl)
 
-Depends heavily upon [NaNStatistics.jl](https://github.com/brenhinkeller/NaNStatistics.jl) for NaN-ignoring summary statistics, histograms, and binning.
+Depends upon [NaNStatistics.jl](https://github.com/brenhinkeller/NaNStatistics.jl) for NaN-ignoring summary statistics, histograms, and binning.
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://brenhinkeller.github.io/StatGeochemBase.jl/stable/
