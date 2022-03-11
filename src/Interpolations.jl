@@ -142,6 +142,26 @@
     extrapolation of the closest two `x`-`y` pairs. Otherwise, if `extrapolate`
     is set to a `Number` (e.g., `0`, or `NaN`), that number will be used
     instead.
+
+    ### Examples
+    ```julia
+    julia> linterp1(1:10, 1:10, 5.5)
+    5.5
+
+    julia> linterp1(1:10, 1:10, 0.5:10.5)
+    11-element Vector{Float64}:
+      0.5
+      1.5
+      2.5
+      3.5
+      4.5
+      5.5
+      6.5
+      7.5
+      8.5
+      9.5
+     10.5
+    ```
     """
     function linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
@@ -156,6 +176,26 @@
     As as `linterp1` (simple linear interpolation in one dimension), but will sort
     the knots `x` and values `y` pairwise if `x` if not already sorted in
     increasing order.
+
+    ### Examples
+    ```julia
+    julia> linterp1s(10:-1:1, 1:10, 5.5)
+    5.5
+
+    julia> linterp1s(10:-1:1, 1:10, 0.5:10.5)
+    11-element Vector{Float64}:
+     10.5
+      9.5
+      8.5
+      7.5
+      6.5
+      5.5
+      4.5
+      3.5
+      2.5
+      1.5
+      0.5
+    ```
     """
     function linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
         sI = sortperm(x) # indices to construct sorted array

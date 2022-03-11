@@ -5,6 +5,25 @@
     (wx, wσ, mswd) = awmean(x, σ)
     ```
     Weighted mean, absent the geochonologist's MSWD correction to uncertainty.
+
+    ### Examples
+    ```julia
+    julia> x = randn(10)
+    10-element Vector{Float64}:
+     -0.977227094347237
+      2.605603343967434
+     -0.6869683962845955
+     -1.0435377148872693
+     -1.0171093080088411
+      0.12776158554629713
+     -0.7298235147864734
+     -0.3164914095249262
+     -1.44052961622873
+      0.5515207382660242
+
+    julia> awmean(x, ones(10))
+    (-0.2926801386288317, 0.31622776601683794, 1.3901517474017941)
+    ```
     """
     function awmean(x, σ)
         n = length(x)
@@ -48,6 +67,25 @@
     ```
     Geochronologist's weighted mean, with "MSWD correction" to uncertainty,
     i.e., wσ is increased by a factor of sqrt(mswd)
+
+    ### Examples
+    ```julia
+    julia> x = randn(10)
+    10-element Vector{Float64}:
+     -0.977227094347237
+      2.605603343967434
+     -0.6869683962845955
+     -1.0435377148872693
+     -1.0171093080088411
+      0.12776158554629713
+     -0.7298235147864734
+     -0.3164914095249262
+     -1.44052961622873
+      0.5515207382660242
+
+    julia> gwmean(x, ones(10))
+    (-0.2926801386288317, 0.372847388002356, 1.3901517474017941)
+    ```
     """
     function gwmean(x, σ)
         n = length(x)
@@ -90,6 +128,25 @@
     ```
     Return the Mean Square of Weighted Deviates (AKA the reduced chi-squared
     statistic) of a dataset with values `x` and one-sigma uncertainties `σ`
+
+    ### Examples
+    ```julia
+    julia> x = randn(10)
+    10-element Vector{Float64}:
+     -0.977227094347237
+      2.605603343967434
+     -0.6869683962845955
+     -1.0435377148872693
+     -1.0171093080088411
+      0.12776158554629713
+     -0.7298235147864734
+     -0.3164914095249262
+     -1.44052961622873
+      0.5515207382660242
+
+    julia> MSWD(x, ones(10))
+    1.3901517474017941
+    ```
     """
     function MSWD(x, σ)
         sum_of_values = sum_of_weights = χ2 = 0.0
@@ -147,6 +204,19 @@
     Uses the York (1968) two-dimensional least-squares fit to calculate `a`, `b`,
     and uncertanties `σa`, `σb` for the equation `y = a + bx`, given `x`, `y` and
     uncertaintes `σx`, ``σy`.
+
+    ### Examples
+    ```julia
+    julia> x = (1:100) .+ randn.();
+
+    julia> y = 2*(1:100) .+ randn.();
+
+    julia> yorkfit(x, ones(100), y, ones(100))
+    York Fit y = a + bx:
+      intercept a: 0.17285439499922006 ± 0.20114100608176483 (1σ)
+      slope b    : 1.9979468555183855 ± 0.0034583991291802217 (1σ)
+      MSWD       : 0.9489056233448502
+    ```
     """
     function yorkfit(x, σx, y, σy; niterations=10)
 
