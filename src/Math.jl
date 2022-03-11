@@ -346,6 +346,19 @@
     ```
     Check if a 2D polygon defined by the arrays `x`, `y` contains a given `point`.
     Returns boolean (true or false)
+
+    ### Examples
+    ```julia
+    julia> x = [0, 1, 1, 0];
+
+    julia> y = [0, 0, 1, 1];
+
+    julia> inpolygon(x, y, (0.5,0.5))
+    true
+
+    julia> inpolygon(x, y, (0.5,1.5))
+    false
+    ```
     """
     function inpolygon(x,y,point)
         # Check that we have the right kind of input data
@@ -432,11 +445,34 @@
 
     """
     ```julia
-    (rows, columns) = find_grid_inpolygon(grid_x, grid_y, poly_x, poly_y)
+    (columns, rows) = find_grid_inpolygon(grid_x, grid_y, poly_x, poly_y)
     ```
     Find the indexes of grid points that fall within a polygon for a grid with
     cell centers given by grid_x (j-columns of grid) and grid_y (i-rows of grid).
     Returns a list of rows and columns in the polygon
+
+    ### Examples
+    ```julia
+    julia> grid_x = -1.5:1/3:1.5;
+
+    julia> grid_y = -1.5:1/3:1.5;
+
+    julia> cols,rows = find_grid_inpolygon(gridx, gridy, [-.4,.4,.4,-.4],[.4,.4,-.4,-.4])
+    ([5, 5, 6, 6], [5, 6, 5, 6])
+
+    julia> grid_x[cols]
+    4-element Vector{Float64}:
+     -0.16666666666666666
+     -0.16666666666666666
+      0.16666666666666666
+      0.16666666666666666
+
+    julia> grid_y[rows]
+    4-element Vector{Float64}:
+     -0.16666666666666666
+      0.16666666666666666
+     -0.16666666666666666
+      0.16666666666666666
     """
     function find_grid_inpolygon(grid_x, grid_y, poly_x, poly_y)
         # Check that we have the right kind of input data
@@ -461,7 +497,7 @@
         n = 0
         for j = 1:length(column_inrange)
             for i = 1:length(row_inrange)
-                point = [grid_x[column_inrange[j]], grid_y[row_inrange[i]]]
+                point = (grid_x[column_inrange[j]], grid_y[row_inrange[i]])
                 if inpolygon(poly_x, poly_y, point)
                     n += 1
                     row[n] = row_inrange[i]
@@ -470,7 +506,7 @@
             end
         end
 
-        return (row[1:n], column[1:n])
+        return (column[1:n], row[1:n])
     end
     export find_grid_inpolygon
 
