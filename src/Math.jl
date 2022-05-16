@@ -495,8 +495,8 @@
         row = Array{Int}(undef,length(column_inrange) * length(row_inrange))
         column = Array{Int}(undef,length(column_inrange) * length(row_inrange))
         n = 0
-        for j = 1:length(column_inrange)
-            for i = 1:length(row_inrange)
+        for j ∈ eachindex(column_inrange)
+            for i ∈ eachindex(row_inrange)
                 point = (grid_x[column_inrange[j]], grid_y[row_inrange[i]])
                 if inpolygon(poly_x, poly_y, point)
                     n += 1

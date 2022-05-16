@@ -113,8 +113,8 @@
     end
     function findmatches!(index, source, target)
         # Loop through source and find first match for each (if any)
-        @inbounds for i = 1:length(index)
-            for j = 1:length(target)
+        @inbounds for i ∈ eachindex(index)
+            for j ∈ eachindex(target)
                 index[i] = 0
                 if isequal(source[i], target[j])
                     index[i] = j
@@ -144,7 +144,7 @@
     end
     function findclosest!(index, source, target)
         # Find closest (numerical) match in target for each value in source
-        @inbounds for i = 1:length(source)
+        @inbounds for i ∈ eachindex(source)
             d = abs(target[1] - source[i])
             index[i] = 1
             for j = 2:length(target)
@@ -172,7 +172,7 @@
         return findclosestbelow!(index, source, target)
     end
     function findclosestbelow!(index, source, target)
-        @inbounds for i = 1:length(source)
+        @inbounds for i ∈ eachindex(source)
             index[i] = d = j = 0
             while j < length(target)
                 j += 1
@@ -210,7 +210,7 @@
         return findclosestabove!(index,source,target)
     end
     function findclosestabove!(index, source, target)
-        @inbounds for i = 1:length(source)
+        @inbounds for i ∈ eachindex(source)
             index[i] = d = j = 0
             while j < length(target)
                 j += 1

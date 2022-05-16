@@ -16,10 +16,10 @@
         Tₓ = promote_type(eltype(x), eltype(xq))
         T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         yq = similar(xq, T, size(xq))
-        @inbounds for i=1:length(knot_index)
+        @inbounds for i ∈ eachindex(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
         end
-        @inbounds for i=1:length(knot_index)
+        @inbounds for i ∈ eachindex(knot_index)
             𝔦₋ = knot_index[i]
             𝔦₊ = 𝔦₋ + 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
@@ -36,10 +36,10 @@
         Tₓ = promote_type(eltype(x), eltype(xq))
         T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         yq = similar(xq, T, size(xq))
-        @turbo for i=1:length(knot_index)
+        @turbo for i ∈ eachindex(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
         end
-        @turbo for i=1:length(knot_index)
+        @turbo for i ∈ eachindex(knot_index)
             𝔦₋ = knot_index[i]
             𝔦₊ = 𝔦₋ + 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
@@ -73,7 +73,7 @@
         Tₓ = promote_type(eltype(x), eltype(xq))
         T = promote_type(eltype(y), Base.promote_op(/, Tₓ, Tₓ))
         yq = similar(xq, T, size(xq))
-        @inbounds for i=1:length(knot_index)
+        @inbounds for i ∈ eachindex(knot_index)
             𝔦 = knot_index[i]
             if i₁ <= 𝔦 <= iₙ
                 𝔦₋ = 𝔦
