@@ -42,7 +42,8 @@
     export fast_inv_sqrt
 
 ## --- Fast vectorized mean
-    function _vmean(A::AbstractArray{T}, ::Colon) where T
+
+    function _vmean(A::DenseArray{T}, ::Colon) where {T<:Number}
         m = zero(T)
         @turbo for i ∈ eachindex(A)
             m += A[i]
