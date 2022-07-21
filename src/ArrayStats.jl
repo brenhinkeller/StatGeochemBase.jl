@@ -116,10 +116,10 @@
         return 0
     end
     function findmatches(source::AbstractArray, target)
-        index = Array{Int}(undef, size(source))
+        index = similar(source, Int)
         return findmatches!(index, source, target)
     end
-    function findmatches!(index, source, target)
+    function findmatches!(index::AbstractArray, source::AbstractArray, target)
         # Loop through source and find first match for each (if any)
         @inbounds for i ∈ eachindex(index)
             index[i] = 0
@@ -146,19 +146,19 @@
     ```julia
     ```
     """
-    function findclosest(source, target)
-        index = Array{Int64}(undef, size(source))
+    function findclosest(source::AbstractArray, target)
+        index = similar(source, Int)
         return findclosest!(index, source, target)
     end
-    function findclosest!(index, source, target)
+    function findclosest!(index::AbstractArray, source::AbstractArray, target)
         # Find closest (numerical) match in target for each value in source
         @inbounds for i ∈ eachindex(source)
-            d = abs(target[1] - source[i])
-            index[i] = 1
-            for j = 2:length(target)
-                d_prop = abs(target[j] - source[i])
-                if d_prop < d
-                    d = d_prop
+            δ = abs(first(target) - source[i])
+            index[i] = firstindex(target)
+            for j ∈ Iterators.drop(eachindex(target),1)
+                δₚ = abs(target[j] - source[i])
+                if δₚ < δ
+                    δ = δₚ
                     index[i] = j
                 end
             end
@@ -175,17 +175,18 @@
     that is less than (i.e., "below") each value in `source`.
     If no such target values exist in `target`, returns an index of 0.
     """
-    function findclosestbelow(source, target)
-        index = Array{Int64}(undef, size(source))
+    function findclosestbelow(source::AbstractArray, target)
+        index = similar(source, Int)
         return findclosestbelow!(index, source, target)
     end
-    function findclosestbelow!(index, source, target)
+    function findclosestbelow!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractUnitRange})
+        δ = first(source) - first(target)
         @inbounds for i ∈ eachindex(source)
-            index[i] = d = j = 0
+            index[i] = j = 0
             while j < length(target)
                 j += 1
                 if target[j] < source[i]
-                    d = source[i] - target[j]
+                    δ = source[i] - target[j]
                     index[i] = j
                     break
                 end
@@ -193,9 +194,9 @@
             while j < length(target)
                 j += 1
                 if target[j] < source[i]
-                    d_prop = source[i] - target[j]
-                    if d_prop < d
-                        d = d_prop
+                    δₚ = source[i] - target[j]
+                    if δₚ < δ
+                        δ = δₚ
                         index[i] = j
                     end
                 end
@@ -213,17 +214,18 @@
     that is greater than (i.e., "above") each value in `source`.
     If no such values exist in `target`, returns an index of 0.
     """
-    function findclosestabove(source, target)
-        index = Array{Int64}(undef, size(source))
-        return findclosestabove!(index,source,target)
+    function findclosestabove(source::AbstractArray, target)
+        index = similar(source, Int)
+        return findclosestabove!(index, source, target)
     end
-    function findclosestabove!(index, source, target)
+    function findclosestabove!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractUnitRange})
+        δ = first(source) - first(target)
         @inbounds for i ∈ eachindex(source)
-            index[i] = d = j = 0
+            index[i] = j = 0
             while j < length(target)
                 j += 1
                 if target[j] > source[i]
-                    d = target[j] - source[i]
+                    δ = target[j] - source[i]
                     index[i] = j
                     break
                 end
@@ -231,9 +233,9 @@
             while j < length(target)
                 j += 1
                 if target[j] > source[i]
-                    d_prop = target[j] - source[i]
-                    if d_prop < d
-                        d = d_prop
+                    δₚ = target[j] - source[i]
+                    if δₚ < δ
+                        δ = δₚ
                         index[i] = j
                     end
                 end
