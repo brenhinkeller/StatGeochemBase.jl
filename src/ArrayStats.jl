@@ -96,8 +96,8 @@
     ```julia
     findmatches(source, target)
     ```
-    Return the index of the first value in `target` (if any) that is equal to
-    a given value in `source` for each value in `source`; else 0.
+    Return the linear index of the first value in `target` (if any) that is equal
+    to a given value in `source` for each value in `source`; else 0.
 
     ### Examples
     ```julia
@@ -108,14 +108,22 @@
     ```
     """
     function findmatches(source, target)
-        index = Array{Int64}(undef, size(source))
+        @inbounds for j ∈ eachindex(target)
+            if isequal(source, target[j])
+                return j
+            end
+        end
+        return 0
+    end
+    function findmatches(source::AbstractArray, target)
+        index = Array{Int}(undef, size(source))
         return findmatches!(index, source, target)
     end
     function findmatches!(index, source, target)
         # Loop through source and find first match for each (if any)
         @inbounds for i ∈ eachindex(index)
+            index[i] = 0
             for j ∈ eachindex(target)
-                index[i] = 0
                 if isequal(source[i], target[j])
                     index[i] = j
                     break
