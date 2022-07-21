@@ -146,6 +146,18 @@
     ```julia
     ```
     """
+    function findclosest(source, target)
+        δ = abs(first(target) - source)
+        index = firstindex(target)
+        @inbounds for j ∈ Iterators.drop(eachindex(target),1)
+            δₚ = abs(target[j] - source)
+            if δₚ < δ
+                δ = δₚ
+                index = j
+            end
+        end
+        return index
+    end
     function findclosest(source::AbstractArray, target)
         index = similar(source, Int)
         return findclosest!(index, source, target)

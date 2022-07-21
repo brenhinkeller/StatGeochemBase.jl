@@ -4,6 +4,7 @@
     A = rand(1:100., 100); B = sort(A)
     @test A[1:count_unique!(A)] == unique(B)
     @test findclosest(3.3:5.3, 1:10) == 3:5
+    @test findclosest(3.6, 1:10) == 4
     @test findclosestbelow(3.3:5.3, 1:10) == 3:5
     @test findclosestabove(3.3:5.3, 1:10) == 4:6
     @test findmatches(40:60, 1:100) == 40:60
