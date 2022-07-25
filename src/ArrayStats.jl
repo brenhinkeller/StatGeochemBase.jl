@@ -191,7 +191,7 @@
         index = similar(source, Int)
         return findclosestbelow!(index, source, target)
     end
-    function findclosestbelow!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractUnitRange})
+    function findclosestbelow!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractRange})
         δ = first(source) - first(target)
         @inbounds for i ∈ eachindex(source)
             index[i] = j = 0
@@ -230,7 +230,7 @@
         index = similar(source, Int)
         return findclosestabove!(index, source, target)
     end
-    function findclosestabove!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractUnitRange})
+    function findclosestabove!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractRange})
         δ = first(source) - first(target)
         @inbounds for i ∈ eachindex(source)
             index[i] = j = 0
