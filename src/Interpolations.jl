@@ -172,11 +172,12 @@
 
     """
     ```julia
-    linterp1!(yq::DenseArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
     ```
     In-place variant of `linterp1`
     """
-    function linterp1!(yq::DenseArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    function linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+        @assert firstindex(yq) === 1
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
         return _linterp1!(yq, x, y, xq, extrapolate)
     end
@@ -222,7 +223,8 @@
     ```
     In-place variant of `linterp1s`
     """
-    function linterp1s!(yq::DenseArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    function linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+        @assert firstindex(yq) === 1
         sI = sortperm(x) # indices to construct sorted array
         return _linterp1!(yq, x[sI], y[sI], xq, extrapolate)
     end
