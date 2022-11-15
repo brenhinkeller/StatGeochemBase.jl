@@ -324,13 +324,13 @@
 
     """
     ```julia
-    draw_from_distribution!(dist::AbstractArray{<:AbstractFloat}, x::Array{<:AbstractFloat})
+    draw_from_distribution!(dist::AbstractArray{<:AbstractFloat}, x::DenseArray{<:AbstractFloat})
     ```
     Fill an existing variable `x` with random floating point numbers drawn from
     a continuous probability distribution specified by a vector `dist`
     defining the PDF curve thereof.
     """
-    function draw_from_distribution!(x::Array{<:AbstractFloat}, dist::AbstractArray{<:AbstractFloat})
+    function draw_from_distribution!(x::DenseArray{<:AbstractFloat}, dist::AbstractArray{<:AbstractFloat})
         # Fill the array x with random numbers from the distribution 'dist'
         dist_ymax = maximum(dist)
         dist_xmax = prevfloat(length(dist) - 1.0)

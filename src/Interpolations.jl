@@ -35,14 +35,38 @@
         _linterp1!(yq, x, y, xq, extrapolate)
     end
 
-    function _linterp1!(yq, x, y, xq::AbstractArray, extrapolate::Symbol)
+    # Allocate knot_index if not provided
+    _linterp1!(yq, x, y, xq::AbstractArray, extrapolate) = _linterp1!(yq, ones(Int, length(xq)), x, y, xq::AbstractArray, extrapolate)
+
+    # Linear interpolation with linear extrapolation
+    function _linterp1!(yq, knot_index, x::DenseArray, y::DenseArray, xq::AbstractArray, extrapolate::Symbol)
         @assert extrapolate === :Linear
         i₁, iₙ = firstindex(x), lastindex(x) - 1
-        knot_index = searchsortedfirst_vec(x, xq) .- 1
+        searchsortedfirst_vec!(knot_index, x, xq)
+        knot_index .-= 1
+        @turbo for i ∈ eachindex(knot_index)
+            knot_index[i] = min(max(knot_index[i], i₁), iₙ)
+        end
+        @turbo for i ∈ eachindex(knot_index, xq, yq)
+            𝔦₋ = knot_index[i]
+            𝔦₊ = 𝔦₋ + 1
+            x₋, x₊ = x[𝔦₋], x[𝔦₊]
+            y₋, y₊ = y[𝔦₋], y[𝔦₊]
+            f = (xq[i] - x₋)/(x₊ - x₋)
+            yq[i] = f*y₊ + (1-f)*y₋
+        end
+        return yq
+    end
+    # Fallback method
+    function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Symbol)
+        @assert extrapolate === :Linear
+        i₁, iₙ = firstindex(x), lastindex(x) - 1
+        searchsortedfirst_vec!(knot_index, x, xq)
+        knot_index .-= 1
         @inbounds for i ∈ eachindex(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
         end
-        @inbounds for i ∈ eachindex(knot_index)
+        @inbounds for i ∈ eachindex(knot_index, xq, yq)
             𝔦₋ = knot_index[i]
             𝔦₊ = 𝔦₋ + 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
@@ -53,27 +77,11 @@
         return yq
     end
 
-    function _linterp1!(yq, x, y::AbstractArray{<:AbstractFloat}, xq::AbstractArray, extrapolate::Symbol)
-        @assert extrapolate === :Linear
+    # Linear interpolation with constant extrapolation
+    function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Number)
         i₁, iₙ = firstindex(x), lastindex(x) - 1
-        knot_index = searchsortedfirst_vec(x, xq) .- 1
-        @turbo for i ∈ eachindex(knot_index)
-            knot_index[i] = min(max(knot_index[i], i₁), iₙ)
-        end
-        @turbo for i ∈ eachindex(knot_index)
-            𝔦₋ = knot_index[i]
-            𝔦₊ = 𝔦₋ + 1
-            x₋, x₊ = x[𝔦₋], x[𝔦₊]
-            y₋, y₊ = y[𝔦₋], y[𝔦₊]
-            f = (xq[i] - x₋)/(x₊ - x₋)
-            yq[i] = f*y₊ + (1-f)*y₋
-        end
-        return yq
-    end
-
-    function _linterp1!(yq, x, y, xq::AbstractArray, extrapolate::Number)
-        i₁, iₙ = firstindex(x), lastindex(x) - 1
-        knot_index = searchsortedfirst_vec(x, xq) .- 1
+        searchsortedfirst_vec!(knot_index, x, xq)
+        knot_index .-= 1
         @inbounds for i ∈ eachindex(knot_index)
             𝔦 = knot_index[i]
             if i₁ <= 𝔦 <= iₙ
@@ -111,18 +119,20 @@
         return searchsortedfirst(v, xx, lo + tn2 - tn2m1, hi, Base.Order.Forward)
     end
 
-    function searchsortedfirst_vec(v::AbstractVector, x::AbstractVector)
-        issorted(x) || return searchsortedfirst.(Ref(v), x)
-        out = zeros(Int, length(x))
-        lo = 1
-        hi = length(v)
-        @inbounds for i in 1:length(x)
-            xx = x[i]
-            y = searchsortedfirst_exp_left(v, xx, lo, hi)
-            out[i] = y
-            lo = min(y, hi)
+    function searchsortedfirst_vec!(ix::AbstractVector, v::AbstractVector, x::AbstractVector)
+        @assert firstindex(v) === 1
+        if issorted(x)
+            lo = 1
+            hi = length(v)
+            @inbounds for i ∈ eachindex(x, ix)
+                y = searchsortedfirst_exp_left(v, x[i], lo, hi)
+                ix[i] = y
+                lo = min(y, hi)
+            end
+        else
+            ix .= searchsortedfirst.(Ref(v), x)
         end
-        return out
+        return ix
     end
 
 
@@ -172,14 +182,13 @@
 
     """
     ```julia
-    linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index=ones(Int, length(xq)))
     ```
-    In-place variant of `linterp1`
+    In-place variant of `linterp1`.
     """
-    function linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
-        @assert firstindex(yq) === 1
+    function linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index::AbstractVector{Int}=ones(Int, length(xq)))
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
-        return _linterp1!(yq, x, y, xq, extrapolate)
+        return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end
     export linterp1!
 
@@ -219,14 +228,19 @@
 
     """
     ```julia
-    linterp1s!(yq::DenseArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    linterp1s!(yq::DenseArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, sort_index=ones(Int, length(x)), knot_index=ones(Int, length(xq)))
     ```
-    In-place variant of `linterp1s`
+    In-place variant of `linterp1s`. Will sort `x` and permute `y` to match.
     """
-    function linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
-        @assert firstindex(yq) === 1
-        sI = sortperm(x) # indices to construct sorted array
-        return _linterp1!(yq, x[sI], y[sI], xq, extrapolate)
+    function linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, sort_index::AbstractVector{Int}=ones(Int, length(x)), knot_index::AbstractVector{Int}=ones(Int, length(xq)))
+        @assert eachindex(sort_index) === eachindex(x) === eachindex(y)
+        @assert eachindex(knot_index) === eachindex(xq)
+        if !issorted(x)
+            sortperm!(sort_index, x) # indices to construct sorted array
+            permute!(x, sort_index)
+            permute!(y, sort_index)
+        end
+        return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end
     export linterp1s!
 

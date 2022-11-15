@@ -287,10 +287,10 @@
     ```
     In-place version of `normcdf`
     """
-    function normcdf!(result::Array, mu::Number, sigma::Number, x::AbstractArray)
+    function normcdf!(result::DenseArray, mu::Number, sigma::Number, x::AbstractArray)
         T = eltype(result)
         inv_sigma_sqrt2 = one(T)/(sigma*T(SQRT2))
-        @turbo for i ∈ 1:length(x)
+        @turbo for i ∈ eachindex(x,result)
             result[i] = T(0.5) + T(0.5) * erf((x[i]-mu) * inv_sigma_sqrt2)
         end
         return result

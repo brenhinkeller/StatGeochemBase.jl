@@ -42,7 +42,7 @@
         wσ = sqrt(1.0 / sum_of_weights)
         return wx, wσ, mswd
     end
-    # function awmean(x::Array{<:Number}, σ::Array{<:Number})
+    # function awmean(x::DenseArray{<:Number}, σ::DenseArray{<:Number})
     #     n = length(x)
     #
     #     sum_of_values = sum_of_weights = χ2 = 0.0
@@ -104,7 +104,7 @@
         wσ = sqrt(mswd / sum_of_weights)
         return wx, wσ, mswd
     end
-    # function gwmean(x::Array{<:Number}, σ::Array{<:Number})
+    # function gwmean(x::DenseArray{<:Number}, σ::DenseArray{<:Number})
     #     n = length(x)
     #     sum_of_values = sum_of_weights = χ2 = 0.0
     #     @turbo for i=1:n
@@ -165,7 +165,7 @@
 
         return χ2 / (n-1)
     end
-    # function MSWD(x::Array{<:Number}, σ::Array{<:Number})
+    # function MSWD(x::DenseArray{<:Number}, σ::DenseArray{<:Number})
     #     sum_of_values = sum_of_weights = χ2 = 0.0
     #     n = length(x)
     #
