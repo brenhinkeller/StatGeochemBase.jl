@@ -228,18 +228,24 @@
 
     """
     ```julia
-    linterp1s!(yq::DenseArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, sort_index=ones(Int, length(x)), knot_index=ones(Int, length(xq)))
+    linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+    linterp1s!(yq::AbstractArray, knot_index::AbstractArray{Int}, x::AbstractArray, y::AbstractArray, xq::AbstractArray; extrapolate=:Linear)
     ```
-    In-place variant of `linterp1s`. Will sort `x` and permute `y` to match.
+    In-place variant of `linterp1s`.
+    Will sort `x` and permute `y` to match, before interpolating at `xq` and storing the result in `yq`.
+
+    An optional temporary working array `knot_index = similar(xq, Int)` may be provided to fully eliminate allocations.
     """
-    function linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, sort_index::AbstractVector{Int}=ones(Int, length(x)), knot_index::AbstractVector{Int}=ones(Int, length(xq)))
-        @assert eachindex(sort_index) === eachindex(x) === eachindex(y)
-        @assert eachindex(knot_index) === eachindex(xq)
-        if !issorted(x)
-            sortperm!(sort_index, x) # indices to construct sorted array
-            permute!(x, sort_index)
-            permute!(y, sort_index)
-        end
+    function linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
+        @assert eachindex(xq) === eachindex(yq)
+        @assert eachindex(x) === eachindex(y)
+        vsort!(y, x) # Sort x and permute y to match
+        return _linterp1!(yq, x, y, xq, extrapolate)
+    end
+    function linterp1s!(yq::AbstractArray, knot_index::AbstractArray{Int}, x::AbstractArray, y::AbstractArray, xq::AbstractArray; extrapolate=:Linear)
+        @assert eachindex(knot_index) === eachindex(xq) === eachindex(yq)
+        @assert eachindex(x) === eachindex(y)
+        vsort!(y, x) # Sort x and permute y to match
         return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end
     export linterp1s!

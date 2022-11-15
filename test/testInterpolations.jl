@@ -30,7 +30,7 @@
     @test linterp1s!(similar(xq), 1:10, 21:30, xq) == [25.0, 25.5, 26.0]
     @test linterp1s!(similar(xq), collect(10:-1:1), collect(21:30), xq) == [26.0, 25.5, 25.0]
     xq = 5:0.5:7
-    @test linterp1s!(similar(xq), collect(10:-1:1), collect(21:30), xq; knot_index=ones(Int,5), sort_index=ones(Int,10)) == [26.0, 25.5, 25.0, 24.5, 24]
+    @test linterp1s!(similar(xq), rand(Int,length(xq)), collect(10:-1:1), collect(21:30), xq) == [26.0, 25.5, 25.0, 24.5, 24]
     xq = 0:0.01:1
     x = rand(200)
     y = rand(200)

@@ -245,8 +245,8 @@
         # terms that don't depend on a or b
         α = sqrt.(ωx .* ωy)
 
-        x̄ = _vmean(x, :)
-        ȳ = _vmean(y, :)
+        x̄ = vmean(x)
+        ȳ = vmean(y)
         r = sum((x .- x̄).*(y .- ȳ)) ./ (sqrt(sum((x .- x̄).^2)) * sqrt(sum((y .- ȳ).^2)))
 
         ## 3. Perform the York fit (must iterate)

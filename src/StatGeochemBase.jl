@@ -1,6 +1,7 @@
 module StatGeochemBase
 
     using NaNStatistics
+    using VectorizedStatistics
 
     # AVX vectorziation tools
     using LoopVectorization
