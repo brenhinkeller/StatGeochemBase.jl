@@ -41,3 +41,28 @@
     @test linterp1!(similar(xq, Float64), 1:10, 1:10, xq, extrapolate=:Linear) == 0:11
     xq = 0.5:10.5
     @test isequal(linterp1!(similar(xq), 1:10, 1:10, xq, extrapolate=NaN), [NaN; 1.5:9.5; NaN])
+
+    # Test consistency of sorting against Base
+    x = rand(10)*10
+    y = rand(10)*10
+    perm = sortperm(x)
+    xs = x[perm]
+    yx = y[perm]
+
+    xq = 0:0.01:10
+    yq = similar(xq)
+    knot_index = rand(Int,length(xq))
+    linterp1s!(yq, knot_index, x, y, xq)
+    @test yq == linterp1(xs, yx, xq)
+
+    x = rand(1000)*10
+    y = rand(1000)*10
+    perm = sortperm(x)
+    xs = x[perm]
+    yx = y[perm]
+
+    xq = 0:0.01:10
+    yq = similar(xq)
+    knot_index = rand(Int,length(xq))
+    linterp1s!(yq, knot_index, x, y, xq)
+    @test yq == linterp1(xs, yx, xq)
