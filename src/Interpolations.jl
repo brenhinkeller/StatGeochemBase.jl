@@ -119,7 +119,7 @@
         return searchsortedfirst(v, xx, lo + tn2 - tn2m1, hi, Base.Order.Forward)
     end
 
-    function searchsortedfirst_vec!(ix::AbstractVector, v::AbstractVector, x::AbstractVector)
+    function searchsortedfirst_vec!(ix::StridedVector, v::AbstractVector, x::AbstractVector)
         @assert firstindex(v) === 1
         if issorted(x)
             lo = 1
@@ -182,11 +182,11 @@
 
     """
     ```julia
-    linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index=ones(Int, length(xq)))
+    linterp1!(yq::StridedArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index=ones(Int, length(xq)))
     ```
     In-place variant of `linterp1`.
     """
-    function linterp1!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index::AbstractVector{Int}=ones(Int, length(xq)))
+    function linterp1!(yq::StridedArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index::AbstractVector{Int}=ones(Int, length(xq)))
         issorted(x) || error("knot-vector `x` must be sorted in increasing order")
         return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end
@@ -228,23 +228,24 @@
 
     """
     ```julia
-    linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
-    linterp1s!(yq::AbstractArray, knot_index::AbstractArray{Int}, x::AbstractArray, y::AbstractArray, xq::AbstractArray; extrapolate=:Linear)
+    linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; extrapolate=:Linear)
+    linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; extrapolate=:Linear)
     ```
     In-place variant of `linterp1s`.
     Will sort `x` and permute `y` to match, before interpolating at `xq` and storing the result in `yq`.
 
     An optional temporary working array `knot_index = similar(xq, Int)` may be provided to fully eliminate allocations.
     """
-    function linterp1s!(yq::AbstractArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
-        @assert eachindex(xq) === eachindex(yq)
+    function linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; extrapolate=:Linear)
+        @assert length(xq) === length(yq)
         @assert eachindex(x) === eachindex(y)
         vsort!(y, x) # Sort x and permute y to match
         return _linterp1!(yq, x, y, xq, extrapolate)
     end
-    function linterp1s!(yq::AbstractArray, knot_index::AbstractArray{Int}, x::AbstractArray, y::AbstractArray, xq::AbstractArray; extrapolate=:Linear)
-        @assert eachindex(knot_index) === eachindex(xq) === eachindex(yq)
+    function linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; extrapolate=:Linear)
+        @assert eachindex(knot_index) === eachindex(yq)
         @assert eachindex(x) === eachindex(y)
+        @assert length(yq) === length(xq)
         vsort!(y, x) # Sort x and permute y to match
         return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end

@@ -27,7 +27,7 @@
     @test linterp1!(similar(xq), 1:10, 21:30, xq) == [25.0, 25.5, 26.0]
     xq = 5:0.5:6
 
-    @test linterp1s!(similar(xq), 1:10, 21:30, xq) == [25.0, 25.5, 26.0]
+    @test linterp1s!(similar(xq), collect(1:10), collect(21:30), xq) == [25.0, 25.5, 26.0]
     @test linterp1s!(similar(xq), collect(10:-1:1), collect(21:30), xq) == [26.0, 25.5, 25.0]
     xq = 5:0.5:7
     @test linterp1s!(similar(xq), rand(Int,length(xq)), collect(10:-1:1), collect(21:30), xq) == [26.0, 25.5, 25.0, 24.5, 24]
