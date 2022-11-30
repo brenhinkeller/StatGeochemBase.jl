@@ -16,10 +16,10 @@ VectorizedStatistics = "3b853605-1c98-4422-8364-4bd93ee0529e"
 Colors = "0.10 - 0.12"
 IndirectArrays = "0.5, 1"
 LoopVectorization = "0.11, 0.12"
-NaNStatistics = "0.3, 0.4, 0.5, 0.6"
+NaNStatistics = "0.3 - 0.6"
 SpecialFunctions = "0.5 - 0.10, 1, 2"
-VectorizationBase = "0.18, 0.19, 0.20, 0.21"
-VectorizedStatistics = "0.4.4"
+VectorizationBase = "0.18 - 0.21"
+VectorizedStatistics = "0.4.4, 0.5"
 julia = "1.6"
 
 [extras]
