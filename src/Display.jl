@@ -9,10 +9,5 @@
         end
     end
 
-    # Custom pretty-printing for York fit results
-    function display(x::YorkFit)
-        print("York Fit y = a + bx:\n  intercept a: $(x.intercept) ± $(x.intercept_sigma) (1σ)")
-        print("\n  slope b    : $(x.slope) ± $(x.slope_sigma) (1σ)\n  MSWD       : $(x.mswd)\n")
-    end
 
-## --- 
+## ---

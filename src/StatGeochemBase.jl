@@ -12,7 +12,6 @@ module StatGeochemBase
     import SpecialFunctions.erf
     erf(x::Vec) = VectorizationBase.verf(x)
     include("Math.jl")
-    include("Geochronology.jl")
 
     using Colors: Color, RGBX, RGB, N0f8
     include("Interpolations.jl")
