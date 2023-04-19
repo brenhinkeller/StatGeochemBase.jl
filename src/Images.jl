@@ -2,7 +2,7 @@
 
     """
     ```julia
-    imsc(A::AbstractMatrix, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
+    imsc(A::AbstractArray, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
     ```
     Convert a matrix `A` to an image (an array of Colors.jl colors) using the
     specified `colormap` (default `viridis`), optionally scaled between `cmin`
@@ -27,7 +27,7 @@
     julia> using Plots; plot(0:3, 0:3, img) # Plot with specified x and y axes
     ```
     """
-    function imsc(A::AbstractMatrix, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
+    function imsc(A::AbstractArray, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
         Nc = length(colormap)
         crange = cmax - cmin
         return  A .|> x -> colormap[isnan(x) ? 1 : ceil(UInt, min(max(Nc*(x-cmin)/crange, 1), Nc))]
@@ -36,7 +36,7 @@
 
     """
     ```julia
-    imsci(A::AbstractMatrix, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
+    imsci(A::AbstractArray, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
     ```
     Convert a matrix `A` to an indirect array image (an IndirectArray of Colors.jl
     colors) using the specified `colormap` (default `viridis`), optionally scaled
