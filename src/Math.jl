@@ -511,18 +511,65 @@
     Latitude and Longitude should be specified in decimal degrees
     """
     function arcdistance(latᵢ,lonᵢ,lat,lon)
+        @assert eachindex(latᵢ) == eachindex(lonᵢ)
+        @assert eachindex(lat) == eachindex(lon)
+
         # Argument for acos()
-        arg = sin.(latᵢ .* pi/180) .* sin.(lat .* pi/180) .+ cos.(latᵢ*pi/180) .* cos.(lat .* pi/180).*cos.((lonᵢ .- lon) .* pi/180)
+        arg = @. sin(latᵢ * pi/180) * sin(lat * pi/180) + cos(latᵢ*pi/180) * cos(lat * pi/180)*cos((lonᵢ - lon) * pi/180)
 
         # Avoid domain errors from imprecise sine and cosine math
-        arg[arg .> 1.0] .= 1.0
-        arg[arg .< -1.0] .= -1.0
+        @inbounds for i in eachindex(arg)
+            if arg[i] < -1
+                arg[i] = -1
+            elseif arg[i] > 1
+                arg[i] = 1
+            end
+        end
 
         # Calculate angular distance
         theta = 180/pi .* acos.(arg)
         return theta
     end
     export arcdistance
+
+    """
+    ```julia
+    minarcdistance(latᵢ,lonᵢ,lat,lon)
+    ```
+    Return the smallest non-`NaN` arcdistance (i.e. distance on a sphere in arc degrees)
+    between a given point (`latᵢ[i]`,`lonᵢ[i]`) and any point in (`lat`,`lon`)
+    for each `i` in `eachindex(latᵢ, lonᵢ)`.
+
+    Latitude and Longitude should be specified in decimal degrees
+    """
+    function minarcdistance(latᵢ,lonᵢ,lat,lon)
+        @assert eachindex(latᵢ) == eachindex(lonᵢ)
+        @assert eachindex(lat) == eachindex(lon)
+
+        # Precalculate some shared factors
+        sli = sin.(latᵢ .* pi/180)
+        sl = sin.(lat .* pi/180)
+        cli = cos.(latᵢ*pi/180)
+        cl = cos.(lat .* pi/180)
+
+        thetamin = fill(NaN, size(latᵢ))
+        @inbounds for i in eachindex(latᵢ)
+            for j in eachindex(lon)
+                arg = sli[i] * sl[j] + cli[i] * cl[j] * cos((lonᵢ[i] - lon[j]) * pi/180)
+                if arg < -1
+                    arg = -1.0
+                elseif arg > 1
+                    arg = 1.0
+                end
+                θᵢⱼ = 180/pi * acos(arg)
+                if !(θᵢⱼ >= thetamin[i])
+                    thetamin[i] = θᵢⱼ
+                end
+            end
+        end
+        return thetamin
+    end
+    export minarcdistance
 
 
 ## --- Linear regression
