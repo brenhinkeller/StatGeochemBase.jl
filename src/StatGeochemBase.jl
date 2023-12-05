@@ -4,13 +4,12 @@ module StatGeochemBase
     using VectorizedStatistics
 
     # AVX vectorziation tools
-    using LoopVectorization
-    using VectorizationBase
-    using VectorizationBase: Vec
+    using LoopVectorization: @turbo
+    using VectorizationBase: Vec, verf
 
-    using SpecialFunctions
+    using SpecialFunctions: erf, erfc, erfcx, erfinv
     import SpecialFunctions.erf
-    erf(x::Vec) = VectorizationBase.verf(x)
+    erf(x::Vec) = verf(x)
     include("Math.jl")
 
     using Colors: Color, RGBX, RGB, N0f8
