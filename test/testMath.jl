@@ -7,31 +7,31 @@
 
 ## --- Significant figures
 
-    @test sigfigs(1/3) === 16
-    @test sigfigs(0.11) === 2
-    @test sigfigs(0.111) === 3
-    @test sigfigs(0.1111) === 4
-    @test sigfigs(0.11111) === 5
-    @test sigfigs(0.111111) === 6
-    @test sigfigs(0.1111111) === 7
-    @test sigfigs(0.11111111) === 8
-    @test sigfigs(0.111111111) === 9
-    @test sigfigs(0.1111111111) === 10
-    @test sigfigs(0.11111111111) === 11
-    @test sigfigs(0.111111111111) === 12
-    @test sigfigs(0.1111111111111) === 13
-    @test sigfigs(0.11111111111111) === 14
-    @test sigfigs(0.111111111111111) === 15
-    @test sigfigs(0.1111111111111111) === 16
+    @test sigdigits(1/3) === 16
+    @test sigdigits(0.11) === 2
+    @test sigdigits(0.111) === 3
+    @test sigdigits(0.1111) === 4
+    @test sigdigits(0.11111) === 5
+    @test sigdigits(0.111111) === 6
+    @test sigdigits(0.1111111) === 7
+    @test sigdigits(0.11111111) === 8
+    @test sigdigits(0.111111111) === 9
+    @test sigdigits(0.1111111111) === 10
+    @test sigdigits(0.11111111111) === 11
+    @test sigdigits(0.111111111111) === 12
+    @test sigdigits(0.1111111111111) === 13
+    @test sigdigits(0.11111111111111) === 14
+    @test sigdigits(0.111111111111111) === 15
+    @test sigdigits(0.1111111111111111) === 16
 
     for T in (BigInt, Int64, Int32, Int16, Int8, UInt64, UInt32, UInt16, UInt8)
-        @test sigfigs(T(100)) === 1
-        @test sigfigs(T(101)) === 3
+        @test sigdigits(T(100)) === 1
+        @test sigdigits(T(101)) === 3
         @test leastsigfig(T(100)) === 100.
         @test leastsigfig(T(101)) === 1.
     end
-    @test sigfigs(big"1000.") === sigfigs(1000.) === sigfigs(Float32(1000.)) === sigfigs(Float16(1000.)) === 1
-    @test sigfigs(big"1000.5") === sigfigs(1000.5) === sigfigs(Float32(1000.5)) === 5
+    @test sigdigits(big"1000.") === sigdigits(1000.) === sigdigits(Float32(1000.)) === sigdigits(Float16(1000.)) === 1
+    @test sigdigits(big"1000.5") === sigdigits(1000.5) === sigdigits(Float32(1000.5)) === 5
     @test leastsigfig(big"1000.") === leastsigfig(1000.) === leastsigfig(Float32(1000.)) === leastsigfig(Float16(1000.)) === 1000.
     @test leastsigfig(big"1000.5") === leastsigfig(1000.5) === leastsigfig(Float32(1000.5)) === 0.1
 

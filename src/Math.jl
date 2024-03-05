@@ -55,23 +55,23 @@
 
     """
     ```julia
-    sigfigs(d)
+    sigdigits(d)
     ```
     Determine the number of decimal significant figures of a number `d`.
 
     ### Examples
     ```julia
-    julia> sigfigs(1000)
+    julia> sigdigits(1000)
     1
     
-    julia> sigfigs(1001)
+    julia> sigdigits(1001)
     4
     
-    julia> sigfigs(1001.1245)
+    julia> sigdigits(1001.1245)
     8
     ```
     """
-    function sigfigs(d::T) where T <: Number
+    function sigdigits(d::T) where T <: Number
         n = 0
         d==d || return n
         rtol = 10.0^-maxdigits(T)
@@ -81,8 +81,8 @@
         end
         return n 
     end
-    sigfigs(d::Irrational) = Inf
-    export sigfigs
+    sigdigits(d::Irrational) = Inf
+    export sigdigits
 
 
     """
@@ -105,7 +105,7 @@
     """
     function leastsigfig(d)
         d==d || return NaN
-        10.0^(floor(Int, log10(abs(d)))-sigfigs(d)+1)
+        10.0^(floor(Int, log10(abs(d)))-sigdigits(d)+1)
     end
     export leastsigfig
 
