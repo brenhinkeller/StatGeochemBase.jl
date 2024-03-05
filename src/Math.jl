@@ -5,14 +5,110 @@
     nearest(T, x)
     ```
     Convert `x` to the nearest representable value in type T, rounding if inexact
+
+    ### Examples
+    ```julia
+    julia> nearest(Int, 1234.56)
+    1235
+
+    julia> nearest(Int, Inf)
+    9223372036854775807
+
+    julia> nearest(Int, -Inf)
+    -9223372036854775808
+    ````
     """
     function nearest(::Type{T}, x) where T <: Number
-        T(max(min(x, typemax(T)), typemin(T)))
+        if x > typemax(T)
+            typemax(T)
+        elseif x < typemin(T)
+            typemin(T)
+        else
+            T(x)
+        end
     end
     function nearest(::Type{T}, x) where T <: Integer
-        round(T, max(min(x, typemax(T)), typemin(T)))
+        if x > typemax(T)
+            typemax(T)
+        elseif x < typemin(T)
+            typemin(T)
+        else
+            round(T, x)
+        end
     end
     export nearest
+
+## --- Determining reported precision of numbers
+
+    # Convert size to decimal precision
+    maxdigits(T::Type) = ceil(Int, sizeof(T)*2.408239965311849)
+    # Special cases
+    maxdigits(::Type{BigFloat}) = 78
+    maxdigits(::Type{Float64}) = 16
+    maxdigits(::Type{Float32}) = 8
+    maxdigits(::Type{Float16}) = 4
+    maxdigits(::Type{Int64}) = 19
+    maxdigits(::Type{Int32}) = 10
+    maxdigits(::Type{Int16}) = 5
+    maxdigits(::Type{Int8}) = 3
+    maxdigits(::Type{Bool}) = 1
+
+    """
+    ```julia
+    sigfigs(d)
+    ```
+    Determine the number of decimal significant figures of a number `d`.
+
+    ### Examples
+    ```julia
+    julia> sigfigs(1000)
+    1
+    
+    julia> sigfigs(1001)
+    4
+    
+    julia> sigfigs(1001.1245)
+    8
+    ```
+    """
+    function sigfigs(d::T) where T <: Number
+        n = 0
+        d==d || return n
+        rtol = 10.0^-maxdigits(T)
+        while n < maxdigits(T)
+            isapprox(d, round(d, sigdigits=n); rtol) && return n
+            n += 1
+        end
+        return n 
+    end
+    sigfigs(d::Irrational) = Inf
+    export sigfigs
+
+
+    """
+    ```julia
+    leastsigfig(d)
+    ```
+    Return the order of magnitude of the least significant decimal digit of a number `d`.
+
+    ### Examples
+    ```julia
+    julia> leastsigfig(1000)
+    1000.0
+    
+    julia> leastsigfig(1001)
+    1.0
+    
+    julia> leastsigfig(1001.1234)
+    0.0001
+    ```
+    """
+    function leastsigfig(d)
+        d==d || return NaN
+        10.0^(floor(Int, log10(abs(d)))-sigfigs(d)+1)
+    end
+    export leastsigfig
+
 
 
 ## --- Fast inverse square-root
