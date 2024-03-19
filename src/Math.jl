@@ -137,11 +137,17 @@
     end
     export fast_inv_sqrt
 
+## --- remove non-positive numbers
 
-## --- Base-10 version of log1p
-#
-#     log10f(x::Number,from::Number=-1) = log10(abs(x-from)+1)*sign(x-from)
-#
+    function positive!(a::DenseArray{<:AbstractFloat})
+        @inbounds for i in eachindex(a)
+            if !(a[i] > 0)
+                a[i] = NaN
+            end
+        end
+        return a
+    end
+    export positive!
 
 ## --- Some mathematical constants
 

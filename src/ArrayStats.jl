@@ -73,7 +73,7 @@
 
     """
     ```julia
-    cntr(edges::AbstractArray)
+    cntr(edges::Collection)
     ```
     Given an array of bin edges, return a corresponding vector of bin centers
 
@@ -83,7 +83,7 @@
      1.5:1.0:9.5
     ```
     """
-    function cntr(edges::AbstractArray)
+    function cntr(edges::Collection)
         centers = (edges[1:end-1] + edges[2:end]) ./ 2
         return centers
     end
@@ -115,11 +115,11 @@
         end
         return 0
     end
-    function findmatches(source::AbstractArray, target)
+    function findmatches(source::Collection, target)
         index = similar(source, Int)
         return findmatches!(index, source, target)
     end
-    function findmatches!(index::AbstractArray, source::AbstractArray, target)
+    function findmatches!(index::DenseArray, source::Collection, target)
         # Loop through source and find first match for each (if any)
         @inbounds for i ∈ eachindex(index)
             index[i] = 0
@@ -158,11 +158,11 @@
         end
         return index
     end
-    function findclosest(source::AbstractArray, target)
+    function findclosest(source::Collection, target)
         index = similar(source, Int)
         return findclosest!(index, source, target)
     end
-    function findclosest!(index::AbstractArray, source::AbstractArray, target)
+    function findclosest!(index::DenseArray, source::Collection, target)
         # Find closest (numerical) match in target for each value in source
         @inbounds for i ∈ eachindex(source)
             δ = abs(first(target) - source[i])
@@ -187,11 +187,11 @@
     that is less than (i.e., "below") each value in `source`.
     If no such target values exist in `target`, returns an index of 0.
     """
-    function findclosestbelow(source::AbstractArray, target)
+    function findclosestbelow(source, target)
         index = similar(source, Int)
         return findclosestbelow!(index, source, target)
     end
-    function findclosestbelow!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractRange})
+    function findclosestbelow!(index::DenseArray, source::Collection, target)
         δ = first(source) - first(target)
         @inbounds for i ∈ eachindex(source)
             index[i] = j = 0
@@ -226,11 +226,11 @@
     that is greater than (i.e., "above") each value in `source`.
     If no such values exist in `target`, returns an index of 0.
     """
-    function findclosestabove(source::AbstractArray, target)
+    function findclosestabove(source, target)
         index = similar(source, Int)
         return findclosestabove!(index, source, target)
     end
-    function findclosestabove!(index::AbstractArray, source::AbstractArray, target::Union{DenseArray,NTuple,AbstractRange})
+    function findclosestabove!(index::DenseArray, source::Collection, target)
         δ = first(source) - first(target)
         @inbounds for i ∈ eachindex(source)
             index[i] = j = 0
@@ -259,11 +259,11 @@
 
     """
     ```julia
-    findnth(t::AbstractArray{Bool}, n::Integer)
+    findnth(t::Collection{Bool}, n::Integer)
     ```
     Return the index of the `n`th true value of `t`, else length(`t`)
     """
-    function findnth(t::AbstractArray{Bool}, n::Integer)
+    function findnth(t::Collection{Bool}, n::Integer)
         N = 0
         @inbounds for i ∈ eachindex(t)
             if t[i]
@@ -279,19 +279,6 @@
 
 ## --- String matching
 
-    # if ~ @isdefined contains
-    #     """
-    #     ```julia
-    #     contains(haystack, needle)
-    #     ```
-    #
-    #     Converts both `haystack` and `needle` to strings (if not already strings)
-    #     and checks whether `string(haystack)` contains `string(needle)`.
-    #     """
-    #     contains(haystack::AbstractString, needle::Union{AbstractString,Regex,AbstractChar}) = occursin(needle, haystack)
-    #     contains(haystack, needle) = occursin(string(needle), string(haystack))
-    #     export contains
-    # end
 
     """
     ```julia
@@ -310,12 +297,12 @@
 
     """
     ```julia
-    x = draw_from_distribution(dist::AbstractArray{<:AbstractFloat}, n::Integer)
+    x = draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
     ```
     Draw `n` random floating point numbers from a continuous probability distribution
-    specified by a vector `dist` defining the PDF curve thereof.
+    specified by a collection `dist` defining the PDF curve thereof.
     """
-    function draw_from_distribution(dist::AbstractArray{<:AbstractFloat}, n::Integer)
+    function draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
         x = Array{eltype(dist)}(undef, n)
         draw_from_distribution!(x, dist)
         return x
@@ -324,13 +311,13 @@
 
     """
     ```julia
-    draw_from_distribution!(dist::AbstractArray{<:AbstractFloat}, x::DenseArray{<:AbstractFloat})
+    draw_from_distribution!(x::DenseArray{<:AbstractFloat}, dist::Collection{AbstractFloat})
     ```
     Fill an existing variable `x` with random floating point numbers drawn from
     a continuous probability distribution specified by a vector `dist`
     defining the PDF curve thereof.
     """
-    function draw_from_distribution!(x::DenseArray{<:AbstractFloat}, dist::AbstractArray{<:AbstractFloat})
+    function draw_from_distribution!(x::DenseArray{<:AbstractFloat}, dist::Collection{AbstractFloat})
         # Fill the array x with random numbers from the distribution 'dist'
         dist_ymax = maximum(dist)
         dist_xmax = prevfloat(length(dist) - 1.0)
@@ -371,17 +358,19 @@
     50.0
     ```
     """
-    function trapezoidalquadrature(edges::AbstractRange, values::AbstractArray)
+    function trapezoidalquadrature(edges::AbstractRange, values::Collection)
+        @assert eachindex(edges)==eachindex(values)
         result = zero(eltype(values))
-        @turbo for i = (firstindex(edges)+1):lastindex(edges)
+        @inbounds @fastmath for i ∈ (firstindex(edges)+1):lastindex(edges)
             result += values[i-1]+values[i]
         end
         dx = (edges[end]-edges[1])/(length(edges) - 1)
         return result * dx / 2
     end
-    function trapezoidalquadrature(edges::AbstractArray, values::AbstractArray)
+    function trapezoidalquadrature(edges::Collection, values::Collection)
+        @assert eachindex(edges)==eachindex(values)
         result = zero(promote_type(eltype(edges), eltype(values)))
-        @turbo for i = (firstindex(edges)+1):lastindex(edges)
+        @inbounds @fastmath for i ∈ (firstindex(edges)+1):lastindex(edges)
             result += (values[i-1] + values[i]) * (edges[i] - edges[i-1])
         end
         return result / 2
@@ -403,7 +392,8 @@
     50.5
     ```
     """
-    function midpointquadrature(bincenters::AbstractRange, values::AbstractArray)
+    function midpointquadrature(bincenters::AbstractRange, values::Collection)
+        @assert eachindex(bincenters)==eachindex(values)
         sum(values) * (last(bincenters)-first(bincenters)) / (length(bincenters) - 1)
     end
     export midpointquadrature

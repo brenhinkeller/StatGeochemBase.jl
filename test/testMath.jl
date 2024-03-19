@@ -4,6 +4,8 @@
     @test isapprox(fast_inv_sqrt(5f0), 1/sqrt(5f0), atol=1e-6)
     @test nearest(Int64, 3.3) === 3
     @test nearest(Float64, 1//3) === 1/3
+    
+    @test all(x->!(x<=0), positive!(randn(100)))
 
 ## --- Significant figures
 
