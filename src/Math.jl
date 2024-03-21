@@ -73,7 +73,7 @@
     """
     function sigdigits(d::T) where T <: Number
         n = 0
-        d==d || return n
+        isfinite(d) || return n
         rtol = 10.0^-maxdigits(T)
         while n < maxdigits(T)
             isapprox(d, round(d, sigdigits=n); rtol) && return n
@@ -104,7 +104,7 @@
     ```
     """
     function leastsigfig(d)
-        d==d || return NaN
+        isfinite(d) || return 1.0*d
         10.0^(floor(Int, log10(abs(d)))-sigdigits(d)+1)
     end
     export leastsigfig
