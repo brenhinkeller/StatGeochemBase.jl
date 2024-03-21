@@ -104,6 +104,7 @@
     ```
     """
     function leastsigfig(d)
+        iszero(d) && return 1.0*d
         isfinite(d) || return 1.0*d
         10.0^(floor(Int, log10(abs(d)))-sigdigits(d)+1)
     end

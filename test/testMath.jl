@@ -37,9 +37,10 @@
     @test leastsigfig(big"1000.") === leastsigfig(1000.) === leastsigfig(Float32(1000.)) === leastsigfig(Float16(1000.)) === 1000.
     @test leastsigfig(big"1000.5") === leastsigfig(1000.5) === leastsigfig(Float32(1000.5)) === 0.1
 
-    @test sigdigits(NaN) == sigdigits(Inf) == 0
+    @test sigdigits(NaN) == sigdigits(Inf) == sigdigits(0) == 0
     @test isnan(leastsigfig(NaN))
     @test leastsigfig(Inf) == Inf
+    @test leastsigfig(0) == 0
 
 ## --- Linear regression
 
