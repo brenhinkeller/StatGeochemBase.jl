@@ -138,7 +138,7 @@
     end
     export fast_inv_sqrt
 
-## --- remove non-positive numbers
+## --- Remove non-positive numbers
 
     function positive!(a::DenseArray{<:AbstractFloat})
         @inbounds for i in eachindex(a)
@@ -149,6 +149,44 @@
         return a
     end
     export positive!
+
+## --- Rescale an AbstractArray between a new minimum and maximum
+
+    """
+    ```julia
+    rescale(y, min::Number=0, max::Number=1)
+    ```
+    Rescale a collection of numbers `y` between a new minimum `min` and new maximum `max`
+
+    ### Examples
+    ```julia
+    julia> rescale(1:5)
+    5-element Vector{Float64}:
+    0.0
+    0.25
+    0.5
+    0.75
+    1.0
+
+    julia> rescale(1:5, -1, 0)
+    5-element Vector{Float64}:
+    -1.0
+    -0.75
+    -0.5
+    -0.25
+    0.0
+    ```
+    """
+    function rescale(y, min::Number=0, max::Number=1)
+        obsmin = nanminimum(y)
+        y_rescaled = float.(y) .- obsmin
+        obsmax = nanmaximum(y_rescaled)
+        y_rescaled ./= obsmax
+        y_rescaled .+= min
+        y_rescaled .*= (max-min)
+        return y_rescaled
+    end
+    export rescale
 
 ## --- Some mathematical constants
 

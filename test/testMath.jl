@@ -7,6 +7,9 @@
     
     @test all(x->!(x<=0), positive!(randn(100)))
 
+    @test rescale(0:10) ≈ 0:0.1:1
+    @test rescale(0:10, -1, 0) ≈ -1:0.1:0
+
 ## --- Significant figures
 
     @test sigdigits(1/3) === 16
