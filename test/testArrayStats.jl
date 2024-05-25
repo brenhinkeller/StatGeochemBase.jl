@@ -10,6 +10,12 @@
     @test findmatches(40:60, 1:100) == 40:60
     @test findmatches(50, 1:100) == 50
     @test findnth(fill(true, 50), 25) == 25
+    x = fill(1, 50)
+    @test findclosestunequal(x, 25) == 25
+    x[end] = 2
+    @test findclosestunequal(x, 25) == 50
+    x[1] = 0
+    @test findclosestunequal(x, 25) == 1
 
     # Interpolation
     @test cntr(0:2:100) == 1:2:99

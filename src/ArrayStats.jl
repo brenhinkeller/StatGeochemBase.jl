@@ -277,6 +277,29 @@
     end
     export findnth
 
+    """
+    ```julia
+    findclosestunequal(x::Collection, i::Integer)
+    ```
+    Return the index of the closest index `n` to `i` for which `x[n] != x[i]`,
+    or `i` if no unequal values of `x` are found.
+    """
+    function findclosestunequal(x::Collection, i::Int)
+        xᵢ = x[i]
+        for offset = 1:(length(x)-1)
+            l = i - offset
+            if l >= firstindex(x)
+                (x[l] == xᵢ) || return l
+            end
+            u = i + offset
+            if u <= lastindex(x)
+                (x[u] == xᵢ) || return u
+            end
+        end
+        return i
+    end
+    export findclosestunequal
+
 ## --- String matching
 
 
