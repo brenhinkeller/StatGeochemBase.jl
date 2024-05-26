@@ -44,10 +44,10 @@
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         searchsortedfirst_vec!(knot_index, x, xq)
         knot_index .-= 1
-        @turbo for i ∈ eachindex(knot_index)
+        @inbounds @fastmath for i ∈ eachindex(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
         end
-        @turbo for i ∈ eachindex(knot_index, xq, yq)
+        @inbounds @fastmath for i ∈ eachindex(knot_index, xq, yq)
             𝔦₋ = knot_index[i]
             𝔦₊ = 𝔦₋ + 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]

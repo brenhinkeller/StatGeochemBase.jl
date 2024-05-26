@@ -224,7 +224,7 @@
     """
     @inline normpdf(mu,sigma,x) = exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
     @inline normpdf(mu::Number,sigma::Number,x::Number) = exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
-    normpdf(mu::AN,sigma::AN,x::AN) = @turbo @. exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
+    normpdf(mu::AN,sigma::AN,x::AN) = @fastmath @. exp(-(x-mu)*(x-mu) / (2*sigma*sigma)) / (SQRT2PI*sigma)
     export normpdf
 
     """
@@ -245,7 +245,7 @@
     function normpdf_ll(mu::Number,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll -= (x[i]-mu)*(x[i]-mu) * inv_s2
         end
         return ll
@@ -253,21 +253,21 @@
     function normpdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) * inv_s2
         end
         return ll
     end
     function normpdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll -= (x[i]-mu)*(x[i]-mu) / (2*sigma[i]*sigma[i])
         end
         return ll
     end
     function normpdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) / (2*sigma[i]*sigma[i])
         end
         return ll
@@ -287,7 +287,7 @@
     """
     @inline normcdf(mu,sigma,x) = 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
     @inline normcdf(mu::Number,sigma::Number,x::Number) = 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
-    normcdf(mu::AN,sigma::AN,x::AN) = @turbo @. 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
+    normcdf(mu::AN,sigma::AN,x::AN) = @fastmath @. 0.5 + 0.5 * erf((x-mu) / (sigma*SQRT2))
     export normcdf
 
 
@@ -374,7 +374,7 @@
             xₛ[i] = normcdf_ll(xₛ[i])
         end
         ll = zero(float(eltype(xₛ)))
-        @turbo for i ∈ eachindex(xₛ)
+        @inbounds @fastmath for i ∈ eachindex(xₛ)
             ll += xₛ[i]
         end
         return ll
@@ -386,7 +386,7 @@
             x[i] = normcdf_ll(xₛ)
         end
         ll = zero(typeof(inv_sigma))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll += x[i]
         end
         return ll
@@ -398,7 +398,7 @@
             x[i] = normcdf_ll(xₛ)
         end
         ll = zero(typeof(inv_sigma))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll += x[i]
         end
         return ll
@@ -409,7 +409,7 @@
             x[i] = normcdf_ll(xₛ)
         end
         ll = zero(float(eltype(sigma)))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll += x[i]
         end
         return ll
@@ -420,7 +420,7 @@
             x[i] = normcdf_ll(xₛ)
         end
         ll = zero(float(eltype(sigma)))
-        @turbo for i ∈ eachindex(x)
+        @inbounds @fastmath for i ∈ eachindex(x)
             ll += x[i]
         end
         return ll
@@ -436,7 +436,7 @@
     function normcdf!(result::DenseArray, mu::Number, sigma::Number, x::AbstractArray)
         T = eltype(result)
         inv_sigma_sqrt2 = one(T)/(sigma*T(SQRT2))
-        @turbo for i ∈ eachindex(x,result)
+        @inbounds @fastmath for i ∈ eachindex(x,result)
             result[i] = T(0.5) + T(0.5) * erf((x[i]-mu) * inv_sigma_sqrt2)
         end
         return result
