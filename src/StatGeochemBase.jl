@@ -20,4 +20,6 @@ module StatGeochemBase
     import Base.display
     include("Display.jl") # Custom pretty-printing
 
+    using DelimitedFiles
+    include("Import.jl")
 end
