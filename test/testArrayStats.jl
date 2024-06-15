@@ -1,5 +1,15 @@
 ## --- test ArrayStats.jl
 
+    # Copying
+    src = rand(100)
+    t = src .< 0.5
+    dest = fill(NaN, count(t))
+    copyat!(dest, src, t)
+    @test dest == src[t]
+
+    reversecopyat!(dest, src, t)
+    @test dest == reverse!(src[t])
+
     # Sorting, counting, matching
     A = rand(1:100., 100); B = sort(A)
     @test A[1:count_unique!(A)] == unique(B)

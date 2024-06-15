@@ -1,3 +1,53 @@
+## --- 
+# To avoid allocations when indexing by a vector of Booleans
+
+
+    """
+    ```julia
+    copyat!(dest, src, tₛ::AbstractVector{Bool})
+    ```
+    Copy from src to dest when tₛ is true. Equivalent to `dest .= src[tₛ]`, but without inducing allocations.
+
+    See also `reversecopyat!`
+    """
+    function copyat!(dest::DenseArray, src, tₛ::AbstractVector{Bool})
+        @assert eachindex(src) == eachindex(tₛ)
+        iₙ = firstindex(dest)
+        iₗ = lastindex(dest)
+        @inbounds for iₛ in eachindex(src)
+            if tₛ[iₛ]
+                dest[iₙ] = src[iₛ]
+                iₙ += 1
+                iₙ > iₗ && break
+            end
+        end
+        return dest
+    end
+    export copyat!
+
+    """
+    ```julia
+    reversecopyat!(dest, src, tₛ::AbstractVector{Bool})
+    ```
+    As `copyat!`, but also reverse the order of stored elements. 
+    
+    Equivalent to `dest .= reverse(src[tₛ])`, but without inducing allocations.
+    """
+    function reversecopyat!(dest::DenseArray, src, tₛ::AbstractVector{Bool})
+        @assert eachindex(src) == eachindex(tₛ)
+        i₀ = firstindex(dest)
+        iₙ = lastindex(dest)
+        @inbounds for iₛ in eachindex(src)
+            if tₛ[iₛ]
+                dest[iₙ] = src[iₛ]
+                iₙ -= 1
+                iₙ < i₀ && break
+            end
+        end
+        return dest
+    end
+    export reversecopyat!
+
 ## --- Sorting and counting array elements
 
     """
