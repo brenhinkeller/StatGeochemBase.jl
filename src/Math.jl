@@ -231,21 +231,20 @@
     ```julia
     normpdf_ll(mu, sigma, x)
     ```
-    Fast log likelihood corresponding to the natural logarithm of the probability
+    Fast log likelihood proportional to the natural logarithm of the probability
     density function of a Normal (Gaussian) distribution with mean `mu` and
     standard deviation `sigma`, evaluated at `x`.
 
     If `x`, [`mu`, and `sigma`] are given as arrays, the sum of the log likelihood
     over all `x` will be returned.
 
-    See also `normpdf`
+    See also `normpdf`, `normlogpdf`
     """
     @inline normpdf_ll(mu,sigma,x) = -(x-mu)*(x-mu) / (2*sigma*sigma)
-    @inline normpdf_ll(mu::Number,sigma::Number,x::Number) = -(x-mu)*(x-mu) / (2*sigma*sigma)
     function normpdf_ll(mu::Number,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @inbounds @fastmath for i ∈ eachindex(x)
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x)
             ll -= (x[i]-mu)*(x[i]-mu) * inv_s2
         end
         return ll
@@ -253,27 +252,72 @@
     function normpdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_s2 = 1/(2*sigma*sigma)
         ll = zero(typeof(inv_s2))
-        @inbounds @fastmath for i ∈ eachindex(x)
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x, mu)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) * inv_s2
         end
         return ll
     end
     function normpdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @inbounds @fastmath for i ∈ eachindex(x)
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x, sigma)
             ll -= (x[i]-mu)*(x[i]-mu) / (2*sigma[i]*sigma[i])
         end
         return ll
     end
     function normpdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @inbounds @fastmath for i ∈ eachindex(x)
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x, mu, sigma)
             ll -= (x[i]-mu[i])*(x[i]-mu[i]) / (2*sigma[i]*sigma[i])
         end
         return ll
     end
     export normpdf_ll
 
+
+    """
+    ```julia
+    normlogpdf(mu, sigma, x)
+    ```
+    The natural logarithm of the probability density function of a Normal (Gaussian) 
+    distribution with mean `mu` and standard deviation `sigma`, evaluated at `x`.
+
+    If `x`, [`mu`, and `sigma`] are given as arrays, the sum of the log probability density
+    over all `x` will be returned.
+
+    See also `normpdf`, `normlogpdf`
+    """
+    @inline normlogpdf(mu,sigma,x) = -(x-mu)*(x-mu) / (2*sigma*sigma) - log(SQRT2PI*sigma)
+    function normlogpdf(mu::Number,sigma::Number,x::AbstractArray)
+        inv_s2 = 1/(2*sigma*sigma)
+        ll = zero(typeof(inv_s2))
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x)
+            ll -= (x[i]-mu)*(x[i]-mu) * inv_s2
+        end
+        return ll - length(x)*log(SQRT2PI*sigma)
+    end
+    function normlogpdf(mu::AbstractArray,sigma::Number,x::AbstractArray)
+        inv_s2 = 1/(2*sigma*sigma)
+        ll = zero(typeof(inv_s2))
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x, mu)
+            ll -= (x[i]-mu[i])*(x[i]-mu[i]) * inv_s2
+        end
+        return ll - log(SQRT2PI*sigma)*length(x)
+    end
+    function normlogpdf(mu::Number,sigma::AbstractArray,x::AbstractArray)
+        ll = zero(float(eltype(sigma)))
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x, sigma)
+            ll -= (x[i]-mu)*(x[i]-mu) / (2*sigma[i]*sigma[i]) + log(SQRT2PI*sigma[i])
+        end
+        return ll
+    end
+    function normlogpdf(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
+        ll = zero(float(eltype(sigma)))
+        @inbounds @fastmath @simd ivdep for i ∈ eachindex(x, mu, sigma)
+            ll -= (x[i]-mu[i])*(x[i]-mu[i]) / (2*sigma[i]*sigma[i]) + log(SQRT2PI*sigma[i])
+        end
+        return ll
+    end
+    export normlogpdf
 
     """
     ```julia
@@ -295,7 +339,7 @@
     ```julia
     normcdf_ll(mu, sigma, x)
     ```
-    Fast log likelihood corresponding to the natural logarithm of the cumulative
+    Fast log likelihood proportional to the natural logarithm of the cumulative
     distribution function of a Normal (Gaussian) distribution with mean `mu` and
     standard deviation `sigma`, evaluated at `x`.
 
@@ -363,7 +407,7 @@
     ```julia
     normcdf_ll!(mu, sigma, x)
     ```
-    Fast log likelihood corresponding to the natural logarithm of the cumulative
+    Fast log likelihood proportional to the natural logarithm of the cumulative
     distribution function of a Normal (Gaussian) distribution with mean `mu` and
     standard deviation `sigma`, evaluated at `x`.
 
@@ -478,11 +522,21 @@
     ```julia
     normproduct_ll(μ1, σ1, μ2, σ2)
     ```
-    Log likelihood corresponding to the integral of N[μ1,σ1] * N[μ2,σ2]
-    As `normproduct`, but using the fast log likelihood of a Normal distribution
+    Fast log likelihood proportional to the integral of N[μ1,σ1] * N[μ2,σ2]
+    As `normlogproduct`, but using the fast log likelihood of a Normal distribution
+    (i.e., without the preexponential terms).
     """
     normproduct_ll(μ1, σ1, μ2, σ2) = normpdf_ll(μ1, sqrt.(σ1.*σ1 + σ2.*σ2), μ2)
     export normproduct_ll
+
+    """
+    ```julia
+    normlogproduct(μ1, σ1, μ2, σ2)
+    ```
+    The logarithm of the integral of N[μ1,σ1] * N[μ2,σ2]
+    """
+    normlogproduct(μ1, σ1, μ2, σ2) = normlogpdf(μ1, sqrt.(σ1.*σ1 + σ2.*σ2), μ2)
+    export normlogproduct
 
 
 ## --- Geometry

@@ -64,6 +64,11 @@
     @test normpdf_ll(0,1,r) == normpdf_ll(0,ones(11),r) == normpdf_ll(zeros(11),ones(11),r) == sum(normpdf_ll.(0,1,r))
     @test normpdf_ll(ones(10),1,collect(1:10)) == normpdf_ll(collect(1:10),1,ones(10)) ≈ -142.5 # Test for symmetry
 
+    @test normlogpdf.(0,1,-5:5) == -(-5:5).^2/2 .- log(sqrt(2pi))
+    r = collect(-5:5)
+    @test normlogpdf(0,1,r) == normlogpdf(0,ones(11),r) == normlogpdf(zeros(11),ones(11),r) == sum(normlogpdf.(0,1,r))
+    @test normlogpdf(ones(10),1,collect(1:10)) == normlogpdf(collect(1:10),1,ones(10)) ≈ -151.68938533204673 # Test for symmetry
+
     @test normcdf(1,1,1) == 0.5
     result = zeros(5)
     normcdf!(result, 0, 1, -2:2)
@@ -80,7 +85,8 @@
     @test normcdf_ll!(zeros(10),1,collect(1:10.)) == normcdf_ll!(-collect(1:10),1,zeros(10)) ≈ -0.19714945770002004 # Test for symmetry
 
     @test normproduct(0,1,0,1) === normpdf(0,sqrt(2),0) === 0.28209479177387814
-    @test normproduct_ll(0,1,0,1) === normpdf_ll(0,1,0) === 0.0
+    @test normproduct_ll(0,1,0,1) === normpdf_ll(0,sqrt(2),0) === 0.0
+    @test normlogproduct(0,1,0,1) === normlogpdf(0,sqrt(2),0) === -log(sqrt(2pi)*sqrt(2))
 
     @test [-2,0,2] ≈ norm_quantile.([0.022750131948, 0.5, 0.977249868052])
     @test norm_quantile.(0:0.25:1) ≈ [-Inf, -0.6744897501960818, 0.0, 0.6744897501960818, Inf]
