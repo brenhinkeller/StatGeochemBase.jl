@@ -5,7 +5,9 @@
     unionize(x::AbstractVector)
     ```
     Turn an array with possibly abstract element type into one with 
-    `eltype` equal to a Union of all types of elements in the array
+    `eltype` equal to a Union of all types of elements in the array.
+
+    Always returns a copy, even if `x` is already unionized.
 
     ### Examples
     ```julia
@@ -31,6 +33,7 @@
         end
         unionized .= x
     end
+    unionize(x::AbstractRange) = copy(x) # Exemption for ranges, which should probably alway have concrete eltype already
     export unionize
 
 

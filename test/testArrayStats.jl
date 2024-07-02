@@ -3,6 +3,8 @@
     # Type wrangling
     a = Any[false, 0, 1.0]
     @test unionize(a) isa Vector{Union{Bool, Int, Float64}}
+    @test unionize(a) == a
+    @test unionize(1:10) === 1:10
 
     # Copying
     src = rand(100)
