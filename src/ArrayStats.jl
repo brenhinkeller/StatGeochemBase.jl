@@ -5,7 +5,7 @@
     unionize(x::AbstractVector)
     ```
     Turn an array with possibly abstract element type into one with 
-    element type equal to a Union of all element types in the array.
+    `eltype` equal to a Union of all types of elements in the array
 
     ### Examples
     ```julia
@@ -33,7 +33,7 @@
     end
     export unionize
 
-    
+
 ## --- To avoid allocations when indexing by a vector of Booleans
 
 
