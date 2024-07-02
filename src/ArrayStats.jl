@@ -1,5 +1,40 @@
-## --- 
-# To avoid allocations when indexing by a vector of Booleans
+## --- To make arrays with messy types better behaved
+
+    """
+    ```julia
+    unionize(x::AbstractVector)
+    ```
+    Turn an array with possibly abstract element type into one with 
+    element type equal to a Union of all element types in the array.
+
+    ### Examples
+    ```julia
+    julia> a = Any[false, 0, 1.0]
+    3-element Vector{Any}:
+     false
+         0
+         1.0
+    
+    julia> unionize(a)
+    3-element Vector{Union{Bool, Float64, Int64}}:
+     false
+         0
+         1.0
+    ```
+    """
+    function unionize(x::AbstractVector)
+        types = unique(typeof.(x))
+        if length(types) > 1
+            unionized = similar(x, Union{types...})
+        else
+            unionized = similar(x, only(types))
+        end
+        unionized .= x
+    end
+    export unionize
+
+    
+## --- To avoid allocations when indexing by a vector of Booleans
 
 
     """

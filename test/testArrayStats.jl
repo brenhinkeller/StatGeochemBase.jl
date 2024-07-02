@@ -1,5 +1,9 @@
 ## --- test ArrayStats.jl
 
+    # Type wrangling
+    a = Any[false, 0, 1.0]
+    @test unionize(a) isa Vector{Union{Bool, Int, Float64}}
+
     # Copying
     src = rand(100)
     t = src .< 0.5
