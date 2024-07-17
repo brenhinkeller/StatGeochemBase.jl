@@ -23,6 +23,8 @@
             y₋, y₊ = y[𝔦₋], y[𝔦₊]
             f = (xq - x₋) / (x₊ - x₋)
             return f*y₊ + (1-f)*y₋
+        elseif knot_index<i₁ && x[i₁] == xq
+            return T(y[i₁])
         else
             return T(extrapolate)
         end
@@ -91,6 +93,8 @@
                 y₋, y₊ = y[𝔦₋], y[𝔦₊]
                 f = (xq[i] - x₋)/(x₊ - x₋)
                 yq[i] = f*y₊ + (1-f)*y₋
+            elseif 𝔦<i₁ && x[i₁] == xq[i]
+                yq[i] = y[i₁]
             else
                 yq[i] = extrapolate
             end

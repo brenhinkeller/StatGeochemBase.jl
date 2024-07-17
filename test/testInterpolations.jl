@@ -1,7 +1,10 @@
 ## --- test Interpolations.jl
 
     # Interpolation
+    @test linterp1(1:10, 1:10, 1, extrapolate=NaN) == 1
+    @test linterp1(1:10, 1:10, 10, extrapolate=NaN) == 10
     @test linterp1(1:10, 1:10, 5.5) == 5.5
+    @test linterp1(1:10, 1:10, 1:10, extrapolate=NaN) == 1:10
     @test linterp1(1:10, collect(1:10.), 3:7) == 3:7
     @test linterp1(1:10,21:30,5:0.5:6) == [25.0, 25.5, 26.0]
     @test linterp1s(10:-1:1,21:30,5:0.5:6) == [26.0, 25.5, 25.0]
