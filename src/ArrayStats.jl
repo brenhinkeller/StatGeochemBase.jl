@@ -222,6 +222,7 @@
     end
     export findmatches, findmatches!
 
+
     """
     ```julia
     findclosest(source, target)
@@ -232,6 +233,13 @@
 
     ### Examples
     ```julia
+    julia> findclosest(3.4, 1:10)
+    3
+
+    julia> findclosest(3:4, 1:10)
+    2-element Vector{Int64}:
+     3
+     4
     ```
     """
     function findclosest(source, target)
@@ -267,6 +275,7 @@
     end
     export findclosest, findclosest!
 
+
     """
     ```julia
     findclosestbelow(source, target)
@@ -275,6 +284,16 @@
     that is less than (i.e., "below") each value in `source`.
     If no such target values exist, returns `firstindex(target)-1`.
 
+    ### Examples
+    ```julia
+    julia> findclosestabove(3.5, 1:10)
+    4
+
+    julia> findclosestabove(3:4, 1:10)
+    2-element Vector{Int64}:
+     4
+     5
+    ```
     """
     findclosestbelow(source, target) = findclosestbelow!(fill(0, length(source)), source, target)
     findclosestbelow(source::Number, target) = only(findclosestbelow!(fill(0), source, target))
@@ -313,6 +332,7 @@
     end
     export findclosestbelow, findclosestbelow!
 
+
     """
     ```julia
     findclosestabove(source, target)
@@ -320,6 +340,17 @@
     Return the index of the nearest value of the indexable collection `target`
     that is greater than (i.e., "above") each value in `source`.
     If no such values exist, returns `lastindex(target)+1`.
+
+    ### Examples
+    ```julia
+    julia> findclosestbelow(3.5, 1:10)
+    3
+    
+    julia> findclosestbelow(3:4, 1:10)
+    2-element Vector{Int64}:
+     2
+     3    
+    ```
     """
     findclosestabove(source, target) = findclosestabove!(fill(0, length(source)), source, target)
     findclosestabove(source::Number, target) = only(findclosestabove!(fill(0), source, target))
@@ -358,11 +389,26 @@
     end
     export findclosestabove, findclosestabove!
 
+
     """
     ```julia
     findnth(t::Collection{Bool}, n::Integer)
     ```
     Return the index of the `n`th true value of `t`, else length(`t`)
+
+    ### Examples
+    ```julia
+    julia> t = rand(Bool,5)
+    5-element Vector{Bool}:
+     1
+     1
+     0
+     1
+     1
+
+    julia> findnth(t, 3)
+    4
+    ```
     """
     function findnth(t::Collection{Bool}, n::Integer)
         N = 0
@@ -378,12 +424,30 @@
     end
     export findnth
 
+
     """
     ```julia
     findclosestunequal(x::Collection, i::Integer)
     ```
     Return the index of the closest index `n` to `i` for which `x[n] != x[i]`,
     or `i` if no unequal values of `x` are found.
+
+    ### Examples
+    ```julia
+    julia> x = [1, 2, 2, 3, 4]
+    5-element Vector{Int64}:
+     1
+     2
+     2
+     3
+     4
+    
+    julia> findclosestunequal(x, 2)
+    1
+    
+    julia> findclosestunequal(x, 3)
+    4    
+    ```
     """
     function findclosestunequal(x::Collection, i::Int)
         xᵢ = x[i]
@@ -408,9 +472,14 @@
     ```julia
     containsi(haystack, needle)
     ```
-
     Converts both `haystack` and `needle` to strings and checks whether
     `string(haystack)` contains `string(needle)`, ignoring case.
+
+    ### Examples
+    ```julia
+    julia> containsi("QuickBrownFox", "brown")
+    true
+    ```
     """
     containsi(haystack::AbstractString, needle::Union{AbstractString,AbstractChar}) = occursin(lowercase(needle), lowercase(haystack))
     containsi(haystack, needle) = occursin(lowercase(string(needle)), lowercase(string(haystack)))
@@ -421,10 +490,23 @@
 
     """
     ```julia
-    x = draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
+    draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
     ```
     Draw `n` random floating point numbers from a continuous probability distribution
     specified by a collection `dist` defining the PDF curve thereof.
+
+    ### Examples
+    ```julia
+    julia> draw_from_distribution([0,1,2,1,0.], 7)
+    7-element Vector{Float64}:
+     0.5271744125470383
+     0.6624591724796276
+     0.7737643383545575
+     0.9603780726501608
+     0.7772477857811155
+     0.8307248435614027
+     0.6351766227803024    
+    ```
     """
     function draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
         x = Array{eltype(dist)}(undef, n)
