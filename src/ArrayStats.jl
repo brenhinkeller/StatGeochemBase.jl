@@ -273,31 +273,38 @@
     ```
     Return the index of the nearest value of the indexable collection `target`
     that is less than (i.e., "below") each value in `source`.
-    If no such target values exist in `target`, returns an index of 0.
+    If no such target values exist, returns `firstindex(target)-1`.
+
     """
-    function findclosestbelow(source, target)
-        index = similar(source, Int)
-        return findclosestbelow!(index, source, target)
-    end
-    function findclosestbelow!(index::DenseArray, source::Collection, target)
-        δ = first(source) - first(target)
-        @inbounds for i ∈ eachindex(source)
-            index[i] = j = 0
-            while j < length(target)
-                j += 1
-                if target[j] < source[i]
-                    δ = source[i] - target[j]
-                    index[i] = j
-                    break
-                end
+    findclosestbelow(source, target) = findclosestbelow!(fill(0, length(source)), source, target)
+    findclosestbelow(source::Number, target) = only(findclosestbelow!(fill(0), source, target))
+    findclosestbelow(source::AbstractArray, target) = findclosestbelow!(similar(source, Int), source, target)
+    function findclosestbelow!(index::DenseArray, source, target)
+        if issorted(target)
+            @inbounds for i ∈ eachindex(source)
+                index[i] = searchsortedfirst(target, source[i]) - 1
             end
-            while j < length(target)
-                j += 1
-                if target[j] < source[i]
-                    δₚ = source[i] - target[j]
-                    if δₚ < δ
-                        δ = δₚ
+        else
+            ∅ = firstindex(target) - 1
+            δ = first(source) - first(target)
+            @inbounds for i ∈ eachindex(source)
+                index[i] = j = ∅
+                while j < lastindex(target)
+                    j += 1
+                    if target[j] < source[i]
+                        δ = source[i] - target[j]
                         index[i] = j
+                        break
+                    end
+                end
+                while j < lastindex(target)
+                    j += 1
+                    if target[j] < source[i]
+                        δₚ = source[i] - target[j]
+                        if δₚ < δ
+                            δ = δₚ
+                            index[i] = j
+                        end
                     end
                 end
             end
@@ -312,31 +319,37 @@
     ```
     Return the index of the nearest value of the indexable collection `target`
     that is greater than (i.e., "above") each value in `source`.
-    If no such values exist in `target`, returns an index of 0.
+    If no such values exist, returns `lastindex(target)+1`.
     """
-    function findclosestabove(source, target)
-        index = similar(source, Int)
-        return findclosestabove!(index, source, target)
-    end
-    function findclosestabove!(index::DenseArray, source::Collection, target)
-        δ = first(source) - first(target)
-        @inbounds for i ∈ eachindex(source)
-            index[i] = j = 0
-            while j < length(target)
-                j += 1
-                if target[j] > source[i]
-                    δ = target[j] - source[i]
-                    index[i] = j
-                    break
-                end
+    findclosestabove(source, target) = findclosestabove!(fill(0, length(source)), source, target)
+    findclosestabove(source::Number, target) = only(findclosestabove!(fill(0), source, target))
+    findclosestabove(source::AbstractArray, target) = findclosestabove!(similar(source, Int), source, target)
+    function findclosestabove!(index::DenseArray, source, target)
+        if issorted(target)
+            @inbounds for i ∈ eachindex(source)
+                index[i] = searchsortedlast(target, source[i]) + 1
             end
-            while j < length(target)
-                j += 1
-                if target[j] > source[i]
-                    δₚ = target[j] - source[i]
-                    if δₚ < δ
-                        δ = δₚ
+        else
+            ∅ = lastindex(target) + 1
+            δ = first(source) - first(target)
+            @inbounds for i ∈ eachindex(source)
+                index[i] = j = ∅
+                while j > firstindex(target)
+                    j -= 1
+                    if target[j] > source[i]
+                        δ = target[j] - source[i]
                         index[i] = j
+                        break
+                    end
+                end
+                while j > firstindex(target)
+                    j -= 1
+                    if target[j] > source[i]
+                        δₚ = target[j] - source[i]
+                        if δₚ < δ
+                            δ = δₚ
+                            index[i] = j
+                        end
                     end
                 end
             end

@@ -21,8 +21,18 @@
     @test A[1:count_unique!(A)] == unique(B)
     @test findclosest(3.3:5.3, 1:10) == 3:5
     @test findclosest(3.6, 1:10) == 4
+    @test findclosestbelow(3.6, 1:10) == 3
+    @test findclosestabove(3.6, 1:10) == 4
     @test findclosestbelow(3.3:5.3, 1:10) == 3:5
     @test findclosestabove(3.3:5.3, 1:10) == 4:6
+    @test findclosestbelow((3.3:5.3...,), 1:10) == 3:5
+    @test findclosestabove((3.3:5.3...,), 1:10) == 4:6
+    @test findclosestbelow(3.6, 10:-1:1) == 11 - 3
+    @test findclosestabove(3.6, 10:-1:1) == 11 - 4
+    @test findclosestbelow(3.3:5.3, 10:-1:1) == 11 .- (3:5)
+    @test findclosestabove(3.3:5.3, 10:-1:1) == 11 .- (4:6)
+    @test findclosestbelow((3.3:5.3...,), 10:-1:1) == 11 .- (3:5)
+    @test findclosestabove((3.3:5.3...,), 10:-1:1) == 11 .- (4:6)
     @test findmatches(40:60, 1:100) == 40:60
     @test findmatches(50, 1:100) == 50
     @test findnth(fill(true, 50), 25) == 25
