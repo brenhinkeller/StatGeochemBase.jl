@@ -243,13 +243,33 @@
     ```
     """
     function findclosest(source, target)
-        δ = abs(first(target) - source)
-        index = firstindex(target)
-        @inbounds for j ∈ Iterators.drop(eachindex(target),1)
-            δₚ = abs(target[j] - source)
-            if δₚ < δ
-                δ = δₚ
-                index = j
+        if issorted(target)
+            𝔦ₛ = searchsortedfirst(target, source)
+            𝔦₊ = min(𝔦ₛ, lastindex(target))
+            𝔦₋ = max(𝔦ₛ-1, firstindex(target))
+            index = if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source) > abs(target[𝔦₋]-source) 
+                𝔦₋
+            else
+                𝔦₊
+            end
+        elseif issorted(target, rev=true)
+            𝔦ₛ = searchsortedfirst(target, source, rev=true)
+            𝔦₊ = min(𝔦ₛ, lastindex(target))
+            𝔦₋ = max(𝔦ₛ-1, firstindex(target))
+            index = if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source) > abs(target[𝔦₋]-source) 
+                𝔦₋
+            else
+                𝔦₊
+            end
+        else
+            δ = abs(first(target) - source)
+            index = firstindex(target)
+            @inbounds for j ∈ Iterators.drop(eachindex(target),1)
+                δₚ = abs(target[j] - source)
+                if δₚ < δ
+                    δ = δₚ
+                    index = j
+                end
             end
         end
         return index
@@ -259,17 +279,43 @@
         return findclosest!(index, source, target)
     end
     function findclosest!(index::DenseArray, source::Collection, target)
+        @assert eachindex(index) == eachindex(source)
         # Find closest (numerical) match in target for each value in source
-        @inbounds for i ∈ eachindex(source)
-            δ = abs(first(target) - source[i])
-            index[i] = firstindex(target)
-            for j ∈ Iterators.drop(eachindex(target),1)
-                δₚ = abs(target[j] - source[i])
-                if δₚ < δ
-                    δ = δₚ
-                    index[i] = j
+        if issorted(target)
+            @inbounds for i ∈ eachindex(source)
+                𝔦ₛ = searchsortedfirst(target, source[i])
+                𝔦₊ = min(𝔦ₛ, lastindex(target))
+                𝔦₋ = max(𝔦ₛ-1, firstindex(target))
+                if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source[i]) > abs(target[𝔦₋]-source[i]) 
+                    index[i] = 𝔦₋
+                else
+                    index[i] = 𝔦₊
                 end
             end
+        elseif issorted(target, rev=true)
+            @inbounds for i ∈ eachindex(source)
+                𝔦ₛ = searchsortedfirst(target, source[i], rev=true)
+                𝔦₊ = min(𝔦ₛ, lastindex(target))
+                𝔦₋ = max(𝔦ₛ-1, firstindex(target))
+                if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source[i]) > abs(target[𝔦₋]-source[i]) 
+                    index[i] = 𝔦₋
+                else
+                    index[i] = 𝔦₊
+                end
+            end
+        else
+            @inbounds for i ∈ eachindex(source)
+                δ = abs(first(target) - source[i])
+                index[i] = firstindex(target)
+                for j ∈ Iterators.drop(eachindex(target),1)
+                    δₚ = abs(target[j] - source[i])
+                    if δₚ < δ
+                        δ = δₚ
+                        index[i] = j
+                    end
+                end
+            end
+
         end
         return index
     end
@@ -302,6 +348,11 @@
         if issorted(target)
             @inbounds for i ∈ eachindex(source)
                 index[i] = searchsortedfirst(target, source[i]) - 1
+            end
+        elseif issorted(target, rev=true)
+            @inbounds for i ∈ eachindex(source)
+                index[i] = searchsortedlast(target, source[i], rev=true) + 1
+                index[i] > lastindex(target) && (index[i] = firstindex(target)-1)
             end
         else
             ∅ = firstindex(target) - 1
@@ -359,6 +410,11 @@
         if issorted(target)
             @inbounds for i ∈ eachindex(source)
                 index[i] = searchsortedlast(target, source[i]) + 1
+            end
+        elseif issorted(target, rev=true)
+            @inbounds for i ∈ eachindex(source)
+                index[i] = searchsortedfirst(target, source[i], rev=true) - 1
+                index[i] < firstindex(target) && (index[i] = lastindex(target)+1)
             end
         else
             ∅ = lastindex(target) + 1

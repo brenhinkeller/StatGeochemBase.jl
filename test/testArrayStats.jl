@@ -19,23 +19,53 @@
     # Sorting, counting, matching
     A = rand(1:100., 100); B = sort(A)
     @test A[1:count_unique!(A)] == unique(B)
-    @test findclosest(3.3:5.3, 1:10) == 3:5
+    @test findnth(fill(true, 50), 25) == 25
+    @test findmatches(40:60, 1:100) == 40:60
+    @test findmatches(50, 1:100) == 50
+
     @test findclosest(3.6, 1:10) == 4
+    @test findclosest(-1, 1:10) == 1
+    @test findclosest(11, 1:10) == 10
+    @test findclosest(3.6, 10:-1:1) == 7
+    @test findclosest(-1, 10:-1:1) == 10
+    @test findclosest(11, 10:-1:1) == 1
+    @test findclosest(3.6, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 7
+    @test findclosest(-1, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 10
+    @test findclosest(11, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 1
+    @test findclosest(3.3:5.3, 1:10) == 3:5
+    @test findclosest(3.3:5.3, 10:-1:1) == 8:-1:6
+    @test findclosest(3.3:5.3, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == [2,7,9]
+
     @test findclosestbelow(3.6, 1:10) == 3
-    @test findclosestabove(3.6, 1:10) == 4
+    @test findclosestbelow(3.6, 10:-1:1) == 8
+    @test findclosestbelow(3.6, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 2
+    @test findclosestbelow(-1, 1:10) == 0
+    @test findclosestbelow(-1, 10:-1:1) == 0
+    @test findclosestbelow(-1, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 0
+    @test findclosestbelow(11, 1:10) == 10
+    @test findclosestbelow(11, 10:-1:1) == 1
+    @test findclosestbelow(11, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 1
     @test findclosestbelow(3.3:5.3, 1:10) == 3:5
-    @test findclosestabove(3.3:5.3, 1:10) == 4:6
     @test findclosestbelow((3.3:5.3...,), 1:10) == 3:5
+    @test findclosestbelow(3.3:5.3, 10:-1:1) == 11 .- (3:5)
+    @test findclosestbelow((3.3:5.3...,), 10:-1:1) == 11 .- (3:5)
+
+    @test findclosestabove(3.6, 1:10) == 4
+    @test findclosestabove(3.6, 10:-1:1) == 7
+    @test findclosestabove(3.6, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 7
+    @test findclosestabove(11, 1:10) == 11
+    @test findclosestabove(11, 10:-1:1) == 11
+    @test findclosestabove(11, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 11
+    @test findclosestabove(0, 1:10) == 1
+    @test findclosestabove(0, 10:-1:1) == 10
+    @test findclosestabove(0, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 10
+    @test findclosestabove(3.3:5.3, 1:10) == 4:6
     @test findclosestabove((3.3:5.3...,), 1:10) == 4:6
     @test findclosestbelow(3.6, 10:-1:1) == 11 - 3
     @test findclosestabove(3.6, 10:-1:1) == 11 - 4
-    @test findclosestbelow(3.3:5.3, 10:-1:1) == 11 .- (3:5)
     @test findclosestabove(3.3:5.3, 10:-1:1) == 11 .- (4:6)
-    @test findclosestbelow((3.3:5.3...,), 10:-1:1) == 11 .- (3:5)
     @test findclosestabove((3.3:5.3...,), 10:-1:1) == 11 .- (4:6)
-    @test findmatches(40:60, 1:100) == 40:60
-    @test findmatches(50, 1:100) == 50
-    @test findnth(fill(true, 50), 25) == 25
+
     x = fill(1, 50)
     @test findclosestunequal(x, 25) == 25
     x[end] = 2
