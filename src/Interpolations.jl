@@ -243,14 +243,20 @@
     function linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; extrapolate=:Linear)
         @assert length(xq) === length(yq)
         @assert eachindex(x) === eachindex(y)
-        vsort!(y, x) # Sort x and permute y to match
+        # vsort!(y, x) # Sort x and permute y to match
+        sI = sortperm(x)
+        permute!(x, sI)
+        permute!(y, sI)
         return _linterp1!(yq, x, y, xq, extrapolate)
     end
     function linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; extrapolate=:Linear)
         @assert eachindex(knot_index) === eachindex(yq)
         @assert eachindex(x) === eachindex(y)
         @assert length(yq) === length(xq)
-        vsort!(y, x) # Sort x and permute y to match
+        # vsort!(y, x) # Sort x and permute y to match
+        sI = sortperm(x)
+        permute!(x, sI)
+        permute!(y, sI)
         return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end
     export linterp1s!

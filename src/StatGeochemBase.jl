@@ -1,7 +1,6 @@
 module StatGeochemBase
 
     using NaNStatistics
-    using VectorizedStatistics
 
     using SpecialFunctions: erf, erfc, erfcx, erfinv
 
