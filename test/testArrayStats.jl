@@ -75,6 +75,8 @@
 
     # Interpolation
     @test cntr(0:2:100) == 1:2:99
+    @test stepify([1,3,2]) == [1, 1, 3, 3, 2, 2]
+    @test stepifyedges([1,2,3,4]) == [1, 2, 2, 3, 3, 4]
 
     # Integration
     @test trapezoidalquadrature(1:10, fill(1,10)) == 9
