@@ -235,10 +235,10 @@
 
     """
     ```julia
-    findmatches(source, target)
+    findmatches(needles, haystack)
     ```
-    Return the linear index of the first value in `target` (if any) that is equal
-    to a given value in `source` for each value in `source`; else 0.
+    Return the linear index of the first value in `haystack` (if any) that is equal
+    to a given value in `needles` for each value in `needles`; else 0.
 
     ### Examples
     ```julia
@@ -248,24 +248,22 @@
      5
     ```
     """
-    function findmatches(source, target)
-        @inbounds for j ∈ eachindex(target)
-            if isequal(source, target[j])
+    function findmatches(needle, haystack::Collection)
+        @inbounds for j ∈ eachindex(haystack)
+            if isequal(needle, haystack[j])
                 return j
             end
         end
         return 0
     end
-    function findmatches(source::Collection, target)
-        index = similar(source, Int)
-        return findmatches!(index, source, target)
-    end
-    function findmatches!(index::DenseArray, source::Collection, target)
-        # Loop through source and find first match for each (if any)
+    findmatches(needles::Collection, haystack::Collection) = findmatches!(fill(0, length(needles)), needles, haystack)
+    function findmatches!(index::DenseArray, needles, haystack)
+        @assert eachindex(index) == eachindex(needles)
+        # Loop through needles and find first match for each (if any)
         @inbounds for i ∈ eachindex(index)
             index[i] = 0
-            for j ∈ eachindex(target)
-                if isequal(source[i], target[j])
+            for j ∈ eachindex(haystack)
+                if isequal(needles[i], haystack[j])
                     index[i] = j
                     break
                 end
@@ -278,10 +276,10 @@
 
     """
     ```julia
-    findclosest(source, target)
+    findclosest(needles, haystack)
     ```
     Return the index of the numerically closest value in the indexable collection
-    `target` for each value in `source`.
+    `haystack` for each value in `needles`.
     If muliple values are equally close, the first one is used
 
     ### Examples
@@ -295,30 +293,30 @@
      4
     ```
     """
-    function findclosest(source, target)
-        if issorted(target)
-            𝔦ₛ = searchsortedfirst(target, source)
-            𝔦₊ = min(𝔦ₛ, lastindex(target))
-            𝔦₋ = max(𝔦ₛ-1, firstindex(target))
-            index = if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source) > abs(target[𝔦₋]-source) 
+    function findclosest(needle, haystack::Collection)
+        if issorted(haystack)
+            𝔦ₛ = searchsortedfirst(haystack, needle)
+            𝔦₊ = min(𝔦ₛ, lastindex(haystack))
+            𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
+            index = if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) > abs(haystack[𝔦₋]-needle) 
                 𝔦₋
             else
                 𝔦₊
             end
-        elseif issorted(target, rev=true)
-            𝔦ₛ = searchsortedfirst(target, source, rev=true)
-            𝔦₊ = min(𝔦ₛ, lastindex(target))
-            𝔦₋ = max(𝔦ₛ-1, firstindex(target))
-            index = if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source) > abs(target[𝔦₋]-source) 
+        elseif issorted(haystack, rev=true)
+            𝔦ₛ = searchsortedfirst(haystack, needle, rev=true)
+            𝔦₊ = min(𝔦ₛ, lastindex(haystack))
+            𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
+            index = if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) > abs(haystack[𝔦₋]-needle) 
                 𝔦₋
             else
                 𝔦₊
             end
         else
-            δ = abs(first(target) - source)
-            index = firstindex(target)
-            @inbounds for j ∈ Iterators.drop(eachindex(target),1)
-                δₚ = abs(target[j] - source)
+            δ = abs(first(haystack) - needle)
+            index = firstindex(haystack)
+            @inbounds for j ∈ Iterators.drop(eachindex(haystack),1)
+                δₚ = abs(haystack[j] - needle)
                 if δₚ < δ
                     δ = δₚ
                     index = j
@@ -327,41 +325,38 @@
         end
         return index
     end
-    function findclosest(source::Collection, target)
-        index = similar(source, Int)
-        return findclosest!(index, source, target)
-    end
-    function findclosest!(index::DenseArray, source::Collection, target)
-        @assert eachindex(index) == eachindex(source)
-        # Find closest (numerical) match in target for each value in source
-        if issorted(target)
-            @inbounds for i ∈ eachindex(source)
-                𝔦ₛ = searchsortedfirst(target, source[i])
-                𝔦₊ = min(𝔦ₛ, lastindex(target))
-                𝔦₋ = max(𝔦ₛ-1, firstindex(target))
-                if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source[i]) > abs(target[𝔦₋]-source[i]) 
+    findclosest(needles::Collection, haystack::Collection) = findclosest!(fill(0, length(needles)), needles, haystack)
+    function findclosest!(index::DenseArray, needles, haystack)
+        @assert eachindex(index) == eachindex(needles)
+        # Find closest (numerical) match in haystack for each value in needles
+        if issorted(haystack)
+            @inbounds for i ∈ eachindex(needles)
+                𝔦ₛ = searchsortedfirst(haystack, needles[i])
+                𝔦₊ = min(𝔦ₛ, lastindex(haystack))
+                𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
+                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) > abs(haystack[𝔦₋]-needles[i]) 
                     index[i] = 𝔦₋
                 else
                     index[i] = 𝔦₊
                 end
             end
-        elseif issorted(target, rev=true)
-            @inbounds for i ∈ eachindex(source)
-                𝔦ₛ = searchsortedfirst(target, source[i], rev=true)
-                𝔦₊ = min(𝔦ₛ, lastindex(target))
-                𝔦₋ = max(𝔦ₛ-1, firstindex(target))
-                if 𝔦₊ != 𝔦₋ && abs(target[𝔦₊]-source[i]) > abs(target[𝔦₋]-source[i]) 
+        elseif issorted(haystack, rev=true)
+            @inbounds for i ∈ eachindex(needles)
+                𝔦ₛ = searchsortedfirst(haystack, needles[i], rev=true)
+                𝔦₊ = min(𝔦ₛ, lastindex(haystack))
+                𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
+                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) > abs(haystack[𝔦₋]-needles[i]) 
                     index[i] = 𝔦₋
                 else
                     index[i] = 𝔦₊
                 end
             end
         else
-            @inbounds for i ∈ eachindex(source)
-                δ = abs(first(target) - source[i])
-                index[i] = firstindex(target)
-                for j ∈ Iterators.drop(eachindex(target),1)
-                    δₚ = abs(target[j] - source[i])
+            @inbounds for i ∈ eachindex(needles)
+                δ = abs(first(haystack) - needles[i])
+                index[i] = firstindex(haystack)
+                for j ∈ Iterators.drop(eachindex(haystack),1)
+                    δₚ = abs(haystack[j] - needles[i])
                     if δₚ < δ
                         δ = δₚ
                         index[i] = j
@@ -377,53 +372,81 @@
 
     """
     ```julia
-    findclosestbelow(source, target)
+    findclosestbelow(needles, haystack)
     ```
-    Return the index of the nearest value of the indexable collection `target`
-    that is less than (i.e., "below") each value in `source`.
-    If no such target values exist, returns `firstindex(target)-1`.
+    Return the index of the nearest value of the indexable collection `haystack`
+    that is less than (i.e., "below") each value in `needles`.
+    If no such haystack values exist, returns `firstindex(haystack)-1`.
 
     ### Examples
     ```julia
-    julia> findclosestabove(3.5, 1:10)
-    4
-
-    julia> findclosestabove(3:4, 1:10)
+    julia> findclosestbelow(3.5, 1:10)
+    3
+    
+    julia> findclosestbelow(3:4, 1:10)
     2-element Vector{Int64}:
-     4
-     5
+     2
+     3    
     ```
     """
-    findclosestbelow(source, target) = findclosestbelow!(fill(0, length(source)), source, target)
-    findclosestbelow(source::Number, target) = only(findclosestbelow!(fill(0), source, target))
-    findclosestbelow(source::AbstractArray, target) = findclosestbelow!(similar(source, Int), source, target)
-    function findclosestbelow!(index::DenseArray, source, target)
-        if issorted(target)
-            @inbounds for i ∈ eachindex(source)
-                index[i] = searchsortedfirst(target, source[i]) - 1
+    function findclosestbelow(needle, haystack::Collection)
+        if issorted(haystack)
+            index = searchsortedfirst(haystack, needle) - 1
+        elseif issorted(haystack, rev=true)
+            index = searchsortedlast(haystack, needle, rev=true) + 1
+            index > lastindex(haystack) && (index = firstindex(haystack)-1)
+        else
+            δ = needle - first(haystack)
+            index = j = firstindex(haystack) - 1
+            while j < lastindex(haystack)
+                j += 1
+                if haystack[j] < needle
+                    δ = needle - haystack[j]
+                    index = j
+                    break
+                end
             end
-        elseif issorted(target, rev=true)
-            @inbounds for i ∈ eachindex(source)
-                index[i] = searchsortedlast(target, source[i], rev=true) + 1
-                index[i] > lastindex(target) && (index[i] = firstindex(target)-1)
+            while j < lastindex(haystack)
+                j += 1
+                if haystack[j] < needle
+                    δₚ = needle - haystack[j]
+                    if δₚ < δ
+                        δ = δₚ
+                        index = j
+                    end
+                end
+            end
+        end
+        return index
+    end
+    findclosestbelow(needles::Collection, haystack::Collection) = findclosestbelow!(fill(0, length(needles)), needles, haystack)
+    function findclosestbelow!(index::DenseArray, needles, haystack)
+        if issorted(haystack)
+            @inbounds for i ∈ eachindex(needles)
+                index[i] = searchsortedfirst(haystack, needles[i]) - 1
+            end
+        elseif issorted(haystack, rev=true)
+            @inbounds for i ∈ eachindex(needles)
+                index[i] = searchsortedlast(haystack, needles[i], rev=true) + 1
+                index[i] > lastindex(haystack) && (index[i] = firstindex(haystack)-1)
             end
         else
-            ∅ = firstindex(target) - 1
-            δ = first(source) - first(target)
-            @inbounds for i ∈ eachindex(source)
+            ∅ = firstindex(haystack) - 1
+            δ = first(needles) - first(haystack)
+            @inbounds for i ∈ eachindex(needles)
                 index[i] = j = ∅
-                while j < lastindex(target)
+                while j < lastindex(haystack)
                     j += 1
-                    if target[j] < source[i]
-                        δ = source[i] - target[j]
+                    if haystack[j] < needles[i]
+                        δ = needles[i] - haystack[j]
                         index[i] = j
                         break
                     end
                 end
-                while j < lastindex(target)
+                while j < lastindex(haystack)
                     j += 1
-                    if target[j] < source[i]
-                        δₚ = source[i] - target[j]
+                    if haystack[j] < needles[i]
+                        δₚ = needles[i] - haystack[j]
                         if δₚ < δ
                             δ = δₚ
                             index[i] = j
@@ -439,53 +462,81 @@
 
     """
     ```julia
-    findclosestabove(source, target)
+    findclosestabove(needles, haystack)
     ```
-    Return the index of the nearest value of the indexable collection `target`
-    that is greater than (i.e., "above") each value in `source`.
-    If no such values exist, returns `lastindex(target)+1`.
+    Return the index of the nearest value of the indexable collection `haystack`
+    that is greater than (i.e., "above") each value in `needles`.
+    If no such values exist, returns `lastindex(haystack)+1`.
 
     ### Examples
     ```julia
-    julia> findclosestbelow(3.5, 1:10)
-    3
-    
-    julia> findclosestbelow(3:4, 1:10)
+    julia> findclosestabove(3.5, 1:10)
+    4
+
+    julia> findclosestabove(3:4, 1:10)
     2-element Vector{Int64}:
-     2
-     3    
+     4
+     5
     ```
     """
-    findclosestabove(source, target) = findclosestabove!(fill(0, length(source)), source, target)
-    findclosestabove(source::Number, target) = only(findclosestabove!(fill(0), source, target))
-    findclosestabove(source::AbstractArray, target) = findclosestabove!(similar(source, Int), source, target)
-    function findclosestabove!(index::DenseArray, source, target)
-        if issorted(target)
-            @inbounds for i ∈ eachindex(source)
-                index[i] = searchsortedlast(target, source[i]) + 1
+    function findclosestabove(needle, haystack::Collection)
+        if issorted(haystack)
+            index = searchsortedlast(haystack, needle) + 1
+        elseif issorted(haystack, rev=true)
+            index = searchsortedfirst(haystack, needle, rev=true) - 1
+            index < firstindex(haystack) && (index = lastindex(haystack)+1)
+        else
+            δ = needle - first(haystack)
+            index = j = lastindex(haystack) + 1
+            while j > firstindex(haystack)
+                j -= 1
+                if haystack[j] > needle
+                    δ = haystack[j] - needle
+                    index = j
+                    break
+                end
             end
-        elseif issorted(target, rev=true)
-            @inbounds for i ∈ eachindex(source)
-                index[i] = searchsortedfirst(target, source[i], rev=true) - 1
-                index[i] < firstindex(target) && (index[i] = lastindex(target)+1)
+            while j > firstindex(haystack)
+                j -= 1
+                if haystack[j] > needle
+                    δₚ = haystack[j] - needle
+                    if δₚ < δ
+                        δ = δₚ
+                        index = j
+                    end
+                end
+            end
+        end
+        return index
+    end
+    findclosestabove(needles::Collection, haystack::Collection) = findclosestabove!(fill(0, length(needles)), needles, haystack)
+    function findclosestabove!(index::DenseArray, needles, haystack)
+        if issorted(haystack)
+            @inbounds for i ∈ eachindex(needles)
+                index[i] = searchsortedlast(haystack, needles[i]) + 1
+            end
+        elseif issorted(haystack, rev=true)
+            @inbounds for i ∈ eachindex(needles)
+                index[i] = searchsortedfirst(haystack, needles[i], rev=true) - 1
+                index[i] < firstindex(haystack) && (index[i] = lastindex(haystack)+1)
             end
         else
-            ∅ = lastindex(target) + 1
-            δ = first(source) - first(target)
-            @inbounds for i ∈ eachindex(source)
+            ∅ = lastindex(haystack) + 1
+            δ = first(needles) - first(haystack)
+            @inbounds for i ∈ eachindex(needles)
                 index[i] = j = ∅
-                while j > firstindex(target)
+                while j > firstindex(haystack)
                     j -= 1
-                    if target[j] > source[i]
-                        δ = target[j] - source[i]
+                    if haystack[j] > needles[i]
+                        δ = haystack[j] - needles[i]
                         index[i] = j
                         break
                     end
                 end
-                while j > firstindex(target)
+                while j > firstindex(haystack)
                     j -= 1
-                    if target[j] > source[i]
-                        δₚ = target[j] - source[i]
+                    if haystack[j] > needles[i]
+                        δₚ = haystack[j] - needles[i]
                         if δₚ < δ
                             δ = δₚ
                             index[i] = j

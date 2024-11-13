@@ -38,6 +38,8 @@
 
     @test findclosestbelow(3.6, 1:10) == 3
     @test findclosestbelow(3.6, 10:-1:1) == 8
+    @test findclosestbelow(3.6, (1, 3, 5, 10, 4, 7, 6, 8, 9)) == 2
+    @test findclosestbelow(3.6, [1, 3, 5, 10, 4, 7, 6, 8, 9]) == 2
     @test findclosestbelow(3.6, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 2
     @test findclosestbelow(-1, 1:10) == 0
     @test findclosestbelow(-1, 10:-1:1) == 0
@@ -52,6 +54,8 @@
 
     @test findclosestabove(3.6, 1:10) == 4
     @test findclosestabove(3.6, 10:-1:1) == 7
+    @test findclosestabove(3.6, (1, 3, 5, 10, 4, 7, 6, 8, 9)) == 5
+    @test findclosestabove(3.6, [1, 3, 5, 10, 4, 7, 6, 8, 9]) == 5
     @test findclosestabove(3.6, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 7
     @test findclosestabove(11, 1:10) == 11
     @test findclosestabove(11, 10:-1:1) == 11
@@ -61,8 +65,6 @@
     @test findclosestabove(0, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 10
     @test findclosestabove(3.3:5.3, 1:10) == 4:6
     @test findclosestabove((3.3:5.3...,), 1:10) == 4:6
-    @test findclosestbelow(3.6, 10:-1:1) == 11 - 3
-    @test findclosestabove(3.6, 10:-1:1) == 11 - 4
     @test findclosestabove(3.3:5.3, 10:-1:1) == 11 .- (4:6)
     @test findclosestabove((3.3:5.3...,), 10:-1:1) == 11 .- (4:6)
 
