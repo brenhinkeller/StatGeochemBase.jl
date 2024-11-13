@@ -5,7 +5,7 @@ module StatGeochemBase
     using SpecialFunctions: erf, erfc, erfcx, erfinv
 
 
-    const Collection{T} = Union{DenseArray{<:T}, AbstractRange{<:T}, NTuple{N,T}} where N
+    const Collection{T} = Union{AbstractArray{<:T}, AbstractRange{<:T}, NTuple{N,T}} where N
     include("Math.jl")
 
     using Colors: Color, RGBX, RGB, N0f8
