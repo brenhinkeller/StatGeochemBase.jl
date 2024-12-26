@@ -1,3 +1,65 @@
+## --- Calculate a 2d path density image from x-y path distributions
+
+    """
+    ```julia
+    image_from_paths(xpoints::AbstractMatrix, ypoints::AbstractMatrix; 
+        xresolution::Int=1800, 
+        yresolution::Int=1200, 
+        xrange=nanextrema(xpoints), 
+        yrange=nanextrema(ypoints),
+    )
+    ```
+    Produce a 2d image (histogram) of path densities given a set of x and y paths 
+    stored column-wise in separate matrices `xpoints` and `ypoints`.
+
+    ### Examples
+    ```julia
+    julia> nsims = 1000
+    1000
+
+    julia> xdist = rand(10, nsims);
+
+    julia> ydist = rand(10, nsims);
+
+    julia> imgcounts, xbincenters, ybincenters = image_from_paths(xpaths, ypaths; xresolution=50, yresolution=50)
+    ([8 15 … 9 11; 12 4 … 14 11; … ; 9 15 … 9 9; 10 17 … 10 14], -3.715247394908744:0.1523101612461508:3.747950506152645, -3.86556932981587:0.1497772964483582:3.4735181961536803)
+    ```
+    """
+    image_from_paths(xpoints, ypoints; xresolution::Int=1800, yresolution::Int=1200, xrange=nanextrema(xpoints), yrange=nanextrema(ypoints)) = image_from_paths!(copy(xpoints), copy(ypoints); xresolution, yresolution, xrange, yrange)
+    export image_from_paths
+
+    function image_from_paths!(xpoints::AbstractMatrix, ypoints::AbstractMatrix; xresolution::Int=1800, yresolution::Int=1200, xrange=nanextrema(xpoints), yrange=nanextrema(ypoints))
+        @assert axes(xpoints, 1) == axes(ypoints, 1)
+        nsims = size(xpoints, 2)
+        @assert axes(xpoints, 2) == axes(ypoints, 2) == Base.OneTo(nsims)
+
+        # Interpolate paths to match image resolution
+        xbinedges = range(first(xrange), last(xrange), length=xresolution+1)
+        xq = cntr(xbinedges)
+        ybinedges = range(first(yrange), last(yrange), length=yresolution+1)
+        yq = cntr(ybinedges)
+        xinterpdist = Array{Float64}(undef, xresolution, nsims)
+        for i in Base.OneTo(nsims)
+            linterp1s!(view(xinterpdist,:,i), view(xpoints, :, i), view(ypoints, :, i), xq)
+        end
+        yinterpdist = Array{Float64}(undef, yresolution, nsims)
+        for i in Base.OneTo(nsims)
+            linterp1s!(view(yinterpdist,:,i), view(xpoints, :, i), view(ypoints, :, i), yq)
+        end
+
+        # Calculate composite image, scanning both by x and y
+        imgcounts = zeros(Int, yresolution, xresolution)
+        for i in Base.OneTo(xresolution) # scan by x (one column at a time)
+            histcounts!(view(imgcounts,:,i), view(xinterpdist,i,:), ybinedges)
+        end
+        for j in Base.OneTo(yresolution) # scan by y (one row at a time)
+            histcounts!(view(imgcounts,j,:), view(yinterpdist,j,:), xbinedges)
+        end
+
+        return imgcounts, xq, yq
+    end
+    export image_from_paths!
+
 ## --- Map colormaps to images
 
     """
