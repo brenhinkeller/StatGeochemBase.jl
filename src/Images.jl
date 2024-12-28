@@ -9,8 +9,10 @@
         yrange=nanextrema(ypoints),
     )
     ```
-    Produce a 2d image (histogram) of path densities given a set of x and y paths 
+    Produce a 2d image (histogram) of path densities given a set of x-y points 
     stored column-wise in separate matrices `xpoints` and `ypoints`.
+    `x` is assumed to be the independent variable (i.e., the x-y points are
+    plotted in order of increasing `x`).
 
     ### Examples
     ```julia
@@ -33,27 +35,47 @@
         nsims = size(xpoints, 2)
         @assert axes(xpoints, 2) == axes(ypoints, 2) == Base.OneTo(nsims)
 
-        # Interpolate paths to match image resolution
+        # Bin edges and centers
         xbinedges = range(first(xrange), last(xrange), length=xresolution+1)
         xq = cntr(xbinedges)
         ybinedges = range(first(yrange), last(yrange), length=yresolution+1)
         yq = cntr(ybinedges)
-        xinterpdist = Array{Float64}(undef, xresolution, nsims)
-        for i in Base.OneTo(nsims)
-            linterp1s!(view(xinterpdist,:,i), view(xpoints, :, i), view(ypoints, :, i), xq)
-        end
-        yinterpdist = Array{Float64}(undef, yresolution, nsims)
-        for i in Base.OneTo(nsims)
-            linterp1s!(view(yinterpdist,:,i), view(xpoints, :, i), view(ypoints, :, i), yq)
-        end
 
-        # Calculate composite image, scanning both by x and y
+        # Use batches to avoid allocating massive intermediate arrays
+        batchsize = min(nsims, 1000)
+        interpydist = zeros(xresolution, batchsize)
+        # interpxdist = zeros(yresolution, batchsize)
+
+        # Output image
         imgcounts = zeros(Int, yresolution, xresolution)
-        for i in Base.OneTo(xresolution) # scan by x (one column at a time)
-            histcounts!(view(imgcounts,:,i), view(xinterpdist,i,:), ybinedges)
+
+        # Loop through batches
+        n₀ = 0
+        while n₀+batchsize <= nsims
+            # Interpolate paths to match image resolution
+            for nᵢ in Base.OneTo(batchsize)
+                n = nᵢ+n₀
+                linterp1s!(view(interpydist, :, nᵢ), view(xpoints, :, n), view(ypoints, :, n), xq)
+            end
+
+            # Calculate composite image
+            for i in Base.OneTo(xresolution) # scan by x (one column at a time)
+                histcounts!(view(imgcounts,:,i), view(interpydist,i,:), ybinedges)
+            end
+            n₀ += batchsize
         end
-        for j in Base.OneTo(yresolution) # scan by y (one row at a time)
-            histcounts!(view(imgcounts,j,:), view(yinterpdist,j,:), xbinedges)
+        nextra = nsims-n₀
+        if nextra>0
+            # Interpolate paths to match image resolution
+            for nᵢ in Base.OneTo(nextra)
+                n = nᵢ+n₀
+                linterp1s!(view(interpydist, :, nᵢ), view(xpoints, :, n), view(ypoints, :, n), xq)
+            end
+
+            # Calculate composite image
+            for i in Base.OneTo(xresolution) # scan by x (one column at a time)
+                histcounts!(view(imgcounts,:,i), view(interpydist,i,1:nextra), ybinedges)
+            end
         end
 
         return imgcounts, xq, yq
