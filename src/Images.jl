@@ -44,7 +44,9 @@
         # Use batches to avoid allocating massive intermediate arrays
         batchsize = min(nsims, 1000)
         interpydist = zeros(xresolution, batchsize)
+        interpyknots = zeros(Int, xresolution)
         # interpxdist = zeros(yresolution, batchsize)
+        # interpxknots = zeros(Int, yresolution)
 
         # Output image
         imgcounts = zeros(Int, yresolution, xresolution)
@@ -55,7 +57,7 @@
             # Interpolate paths to match image resolution
             for nᵢ in Base.OneTo(batchsize)
                 n = nᵢ+n₀
-                linterp1s!(view(interpydist, :, nᵢ), view(xpoints, :, n), view(ypoints, :, n), xq)
+                linterp1s!(view(interpydist, :, nᵢ), interpyknots, view(xpoints, :, n), view(ypoints, :, n), xq)
             end
 
             # Calculate composite image
@@ -69,7 +71,7 @@
             # Interpolate paths to match image resolution
             for nᵢ in Base.OneTo(nextra)
                 n = nᵢ+n₀
-                linterp1s!(view(interpydist, :, nᵢ), view(xpoints, :, n), view(ypoints, :, n), xq)
+                linterp1s!(view(interpydist, :, nᵢ), interpyknots, view(xpoints, :, n), view(ypoints, :, n), xq)
             end
 
             # Calculate composite image
