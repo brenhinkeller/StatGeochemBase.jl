@@ -112,6 +112,11 @@ renormalize!(datadict, datadict["elements"], total=100.)
 @test StatGeochemBase.isnumeric(NaN) == true
 @test StatGeochemBase.nonnumeric(NaN) == false
 
+@test StatGeochemBase.sanitizevarname("foo") == "foo"
+@test StatGeochemBase.sanitizevarname("523foo") == "_523foo"
+@test StatGeochemBase.sanitizevarname("Length (μm)") == "Length_μm"
+@test StatGeochemBase.sanitizevarname(3.14) == "_3_14"
+
 @test StatGeochemBase.symboltuple((:foo, :bar, :baz)) === (:foo, :bar, :baz)
 @test StatGeochemBase.symboltuple(("foo", "bar", "baz")) === (:foo, :bar, :baz)
 @test StatGeochemBase.symboltuple([:foo, :bar, :baz]) === (:foo, :bar, :baz)

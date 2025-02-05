@@ -415,16 +415,17 @@
 
     ### Examples
     ```julia
-    julia> StatGeochem.sanitizevarname("foo")
+    julia> StatGeochemBase.sanitizevarname("foo")
     "foo"
 
-    julia> StatGeochem.sanitizevarname("523foo")
+    julia> StatGeochemBase.sanitizevarname("523foo")
     "_523foo"
 
-    julia> StatGeochem.sanitizevarname("Length (μm)")
+    julia> StatGeochemBase.sanitizevarname("Length (μm)")
     "Length_μm"
     ```
     """
+    sanitizevarname(s) = sanitizevarname(string(s))
     function sanitizevarname(s::AbstractString)
         s = replace(s, r"[\[\](){}]" => "") # Remove parentheses entirely
         s = replace(s, r"^([0-9])" => s"_\1") # Can't begin with a number
