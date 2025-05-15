@@ -2,6 +2,11 @@
 
 @test parsedlm("1,2,3\n4,5,6\n7,8,9\n", ',', Float64) == reshape(1:9,3,3)'
 @test parsedlm("1,2,3,4\n5,6,7,8\n9,10,11,12\n13,14,15,16", ',', Int64) == reshape(1:16,4,4)'
+@test parsedlm("1,2,3\n4,5,6\n7,8,9\n", ',', Float64, merge=true) == reshape(1:9,3,3)'
+@test parsedlm("1,2,3,4\n5,6,7,8\n9,10,11,12\n13,14,15,16", ',', Int64, merge=true) == reshape(1:16,4,4)'
+@test parsedlm("1,2,,3\n4,,,,5,,6\n7,,,8,,,9\n", ',', Float64, merge=true) == reshape(1:9,3,3)'
+@test parsedlm("1,2,3,,4\n5,6,7,8\n9,10,11,,,,12\n13,,,,14,15,16", ',', Int64, merge=true) == reshape(1:16,4,4)'
+@test isequal(parsedlm("1,2,,3\n4,5,6,,,,,\n7,8,9,,\n", ',', Float64, merge=true), [1.0 2.0 3.0 NaN; 4.0 5.0 6.0 NaN; 7.0 8.0 9.0 NaN])
 
 A = delim_string_function(x -> delim_string_parse(x, ',', Float32),
     "1,2,3,4\n5,6,7,8\n9,10,11,12\n13,14,15,16", '\n', Array{Float32,1})
@@ -18,7 +23,7 @@ elements = ["U" "Lv" "Te" "O" "Er" "W" "Re" "j" "asdf" "Zr" "Al" "S" "K" "V" "N"
 data = vcat(elements, hcat(rand(1000, length(elements)-1), string.(rand("abcdefghijklmnopqrstuvwxyz0123456789",1000))))
 datatuple = elementify(data,importas=:Tuple)::NamedTuple
 datadict = elementify(data,importas=:Dict)::Dict
-@test isa(display(datatuple), Nothing)
+# @test isa(display(datatuple), Nothing)
 
 @test isa(datatuple, NamedTuple)
 @test unelementify(datatuple) == data

@@ -229,7 +229,7 @@
 
     """
     ```julia
-    parsedlm(str::AbstractString, delimiter::Char, T::Type=Float64; rowdelimiter::Char='\\n')
+    parsedlm(str::AbstractString, delimiter::Char, T::Type=Float64; rowdelimiter::Char='\\n', merge::Bool=false)
     ```
     Parse a string delimited by both row and column into a single (2-D) matrix. Default column delimiter is newline.
     Similar to `readdlm`, but operating on a string instead of a file.
@@ -250,13 +250,15 @@
      13  14  15  16
     ```
     """
-    function parsedlm(str::AbstractString, delimiter::Char, ::Type{T}=Float64; rowdelimiter::Char='\n') where {T}
+    function parsedlm(str::AbstractString, delimiter::Char, ::Type{T}=Float64; rowdelimiter::Char='\n', merge::Bool=false) where {T}
 
     	# Count rows, and find maximum number of delimiters per row
     	numcolumns = maxcolumns = maxrows = 0
-    	cₗ = delimiter
+    	cₗ = rowdelimiter
     	for c in str
-    		(c == delimiter) && (numcolumns += 1)
+            if c == delimiter && (!merge || cₗ != delimiter)
+    		    numcolumns += 1
+            end
     		if c == rowdelimiter
     			maxrows += 1
     			numcolumns += 1
@@ -289,15 +291,22 @@
         			isnothing(parsed) || (parsedmatrix[i,j] = parsed)
                 end
 
-                # If we're at the end of the string, move on
+                # If we're at the end of the string, we're done
                 (kₙ == maxchars) && break
 
-    			# Step over the delimiter
-    			kₗ = kₙ = nextind(str, kₙ)
+                # Step over any delimiter(s)
+                kₗ = kₙ = nextind(str, kₙ)
+                if merge
+                    while str[kₙ] == delimiter
+                        kₗ = kₙ = nextind(str, kₙ)
+                    end                    
+                end
 
                 # If we've hit a row delimiter, move to next row
-                (str[kₙ] == rowdelimiter) && break
+                (c == rowdelimiter) && break
     		end
+            # If we're at the end of the string, we're done
+            (kₙ == maxchars) && break
     	end
     	return parsedmatrix
     end
