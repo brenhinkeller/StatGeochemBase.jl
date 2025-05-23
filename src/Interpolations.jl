@@ -1,7 +1,7 @@
-## --- Simple linear interpolations
+## --- 1D linear interpolation, implementation
 
     function _linterp1(x, y, xq::Number, extrapolate::Symbol)
-        @assert extrapolate === :Linear
+        @assert extrapolate === :Linear || extrapolate === :linear
         knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
         𝔦₋ = min(max(knot_index, firstindex(x)), lastindex(x) - 1)
         𝔦₊ = 𝔦₋ + 1
@@ -42,7 +42,7 @@
 
     # Linear interpolation with linear extrapolation
     function _linterp1!(yq, knot_index, x::DenseArray, y::DenseArray, xq::AbstractArray, extrapolate::Symbol)
-        @assert extrapolate === :Linear
+        @assert extrapolate === :Linear || extrapolate === :linear
         i₁, iₙ = firstindex(x), lastindex(x) - 1
         searchsortedfirst_vec!(knot_index, x, xq)
         knot_index .-= 1
@@ -140,7 +140,7 @@
     end
 
 
-## --- Linear interpolation, top-level functions
+## --- 1D Linear interpolation, top-level functions
 
 
     """
@@ -179,7 +179,7 @@
     ```
     """
     function linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear)
-        issorted(x) || error("knot-vector `x` must be sorted in increasing order")
+        @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
         return _linterp1(x, y, xq, extrapolate)
     end
     export linterp1
@@ -191,7 +191,7 @@
     In-place variant of `linterp1`.
     """
     function linterp1!(yq::StridedArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:Linear, knot_index::AbstractVector{Int}=ones(Int, length(xq)))
-        issorted(x) || error("knot-vector `x` must be sorted in increasing order")
+        @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
         return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
     end
     export linterp1!
@@ -291,3 +291,113 @@
         end
     end
     export resize_colormap
+
+## -- 2D linear interpolation
+
+    function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, extrapolate::Symbol)
+        @assert extrapolate === :Bilinear || extrapolate === :bilinear
+        x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
+        i₋x = min(max(x_knot_index, firstindex(x)), lastindex(x) - 1)
+        i₊x = i₋x + 1
+        x₋, x₊ = x[i₋x], x[i₊x]
+        y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) - 1
+        i₋y = min(max(y_knot_index, firstindex(y)), lastindex(y) - 1)
+        i₊y = i₋y + 1
+        y₋, y₊ = y[i₋y], y[i₊y]
+        z₋₋ = z[i₋y, i₋x]
+        z₋₊ = z[i₋y, i₊x]
+        z₊₋ = z[i₊y, i₋x]
+        z₊₊ = z[i₊y, i₊x]
+        fx = (xq - x₋) / (x₊ - x₋)
+        fy = (yq - y₋) / (y₊ - y₋)
+        return fx*fy*z₊₊ + fx*(1-fy)*z₊₋ + (1-fx)*fy*z₋₊ + (1-fx)*(1-fy)*z₋₋
+        # Alternatively:
+        # z₊ = fx*z₊₊ + (1-fx)*z₊₋
+        # z₋ = fx*z₋₊ + (1-fx)*z₋₋
+        # return fy*z₊ + (1-fy)*z₋
+    end
+    function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, extrapolate::Number)
+        i₁x, iₙx = firstindex(x), lastindex(x) - 1
+        x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
+        first(x)==xq && (x_knot_index = i₁x)
+        i₁y, iₙy = firstindex(y), lastindex(y) - 1
+        y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) - 1
+        first(y)==yq && (y_knot_index = i₁y)
+        T = float(eltype(z))
+        if (i₁x <= x_knot_index <= iₙx) && (i₁y <= y_knot_index <= iₙy)
+            i₋x = x_knot_index
+            i₊x = i₋x + 1
+            x₋, x₊ = x[i₋x], x[i₊x]
+            i₋y = y_knot_index
+            i₊y = i₋y + 1
+            y₋, y₊ = y[i₋y], y[i₊y]
+            z₋₋ = z[i₋y, i₋x]
+            z₋₊ = z[i₋y, i₊x]
+            z₊₋ = z[i₊y, i₋x]
+            z₊₊ = z[i₊y, i₊x]
+            fx = (xq - x₋) / (x₊ - x₋)
+            fy = (yq - y₋) / (y₊ - y₋)
+            return fx*fy*z₊₊ + fx*(1-fy)*z₊₋ + (1-fx)*fy*z₋₊ + (1-fx)*(1-fy)*z₋₋
+            # Alternatively:
+            # z₊ = fx*z₊₊ + (1-fx)*z₊₋
+            # z₋ = fx*z₋₊ + (1-fx)*z₋₋
+            # return fy*z₊ + (1-fy)*z₋
+        else
+            return T(extrapolate)
+        end
+    end
+
+    """
+    ```julia
+    zq = linterp1(x, y, z::AbstractMatrix, xq::Number, yq::Number; extrapolate=:Bilinear)
+    ```
+    Simple linear interpolation in one dimension. Given vectors of knots `x` and `y`
+    and a matrix of values `z`, find the corresponding `z` values at position `xq`,`yq`.
+
+    Knot vectors `x` and `y` must be sorted in increasing order, and must match z
+    in dimension, such that `eachindex(x) == axes(z,2)` and `eachindex(y) == axes(z,1)`
+
+    If the optional keyword argument `extrapolate` is set to `:Bilinear` (default),
+    out-of-bounds `xq`,`yq` pairs will be extrapolated (or interpolated) linearly in `x` 
+    and then linearly in `y` (yielding a quadratic result as a whole), based on the 
+    closest four z values. Otherwise, if `extrapolate` is set to a `Number` 
+    (e.g., `0`, or `NaN`), that number will be used instead.
+
+    ### Examples
+    ```julia
+    julia> x = 1:3
+     1:3
+
+    julia> y = 1:4
+     1:4
+
+    julia> z = y*x'
+    4×3 Matrix{Int64}:
+     1  2   3
+     2  4   6
+     3  6   9
+     4  8  12
+
+    julia> linterp2(x,y,z,1.5,1.5)
+     2.25
+
+    julia> linterp2(x,y,z,2.5,3.5)
+     8.75
+
+    julia> linterp2(x,y,z,1,-10,extrapolate=:Bilinear)
+     -10.0
+
+    julia> linterp2(x,y,z,2,-10,extrapolate=:Bilinear)
+     -20.0
+    ```
+    """
+    function linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number; extrapolate=:Bilinear)
+        @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
+        @assert issorted(y) "knot-vector `y` must be sorted in increasing order"
+        @assert eachindex(x) == axes(z,2) "Dimensions of `x` must match the horizontal axis of `z`"
+        @assert eachindex(y) == axes(z,1) "Dimensions of `y` must match the vertical axis of `z`"
+        _linterp2(x, y, z, xq, yq, extrapolate)
+    end
+    export linterp2
+
+## --- End of File

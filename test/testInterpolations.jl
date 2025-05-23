@@ -1,4 +1,4 @@
-## --- test Interpolations.jl
+## --- Test 1-D interpolations
 
     # Interpolation
     @test linterp1(1:10, 1:10, 1, extrapolate=NaN) == 1
@@ -69,3 +69,28 @@
     knot_index = rand(Int,length(xq))
     linterp1s!(yq, knot_index, x, y, xq)
     @test yq == linterp1(xs, yx, xq)
+
+## --- Test 2-D interpolations
+
+    x = 1:3
+    y = 1:4
+    z = y*x'
+    @test linterp2(x,y,z,1.5,1.5) ≈ 2.25
+    @test linterp2(x,y,z,1.5,1.5, extrapolate=NaN) ≈ 2.25
+    @test linterp2(x,y,z,1.5,1.5, extrapolate=:Bilinear) ≈ 2.25
+    @test linterp2(x,y,z,2.5,3.5) ≈ 8.75
+    @test linterp2(x,y,z,1,-10,extrapolate=:Bilinear) ≈ -10.0
+    @test linterp2(x,y,z,-10,-10,extrapolate=:Bilinear) ≈ 100
+    @test isnan(linterp2(x,y,z,1,-10,extrapolate=NaN))
+    @test isnan(linterp2(x,y,z,-10,-10,extrapolate=NaN))
+
+    z = rand(4,3)
+    @test linterp2(x,y,z,1.5,1.5) ≈ linterp2(x,y,z,1.5,1.5, extrapolate=NaN) ≈ nanmean(z[1:2,1:2])
+    @test linterp2(x,y,z,2.5,3.5) ≈ linterp2(x,y,z,2.5,3.5, extrapolate=NaN) ≈ nanmean(z[3:4,2:3])
+    
+    xq = rand()*2+1
+    yq = rand()*3+1
+    @test linterp2(x,y,z,xq,yq) ≈ linterp2(x,y,z,xq,yq, extrapolate=NaN)
+    @test linterp2(x,y,z,xq,yq) ≈ linterp2(x,y,z,xq,yq, extrapolate=NaN)
+
+## --- End of File
