@@ -765,4 +765,96 @@
     export midpointquadrature
 
 
+## --- MCMC inversion
+
+    """
+    ```julia
+    mcmc_surface(xaxis::AbstractRange, yaxis::AbstractRange, llmatrix::AbstractMatrix; 
+        nsteps::Int=100000, 
+        burnin::Int=10000,
+    )
+    ```
+    Explore a precomputed log likelihood surface `llmatrix` with dimensions 
+    `xaxis` (horizontal, columns) and `yaxis` (vertical, rows) using a 
+    Markov chain Monte Carlo approach (the Metropolis algorithm)
+    to calculate posterior distributions for x and y.
+
+    ### Examples
+    ```julia
+    julia> xaxis = yaxis = -5:0.01:5
+     -5.0:0.01:5.0
+
+    julia> llmatrix = [-((x+1)^2/0.5^2 + (y-1)^2/0.5^2) for y in yaxis, x in xaxis];
+
+    julia> xdist, ydist, lldist, acceptancedist = mcmc_surface(xaxis,yaxis,llmatrix);
+
+    julia> mean(xdist), std(xdist)
+     (-0.9888633375860412, 0.41023499283715603)
+
+    julia> mean(ydist), std(ydist)
+     (1.0110703489524537, 0.4182564675721746)
+    ```
+    """
+    function mcmc_surface(xaxis::AbstractRange, yaxis::AbstractRange, llmatrix::AbstractMatrix; 
+            nsteps::Int=100000, 
+            burnin::Int=10000,
+        )
+        @assert eachindex(xaxis) == axes(llmatrix, 2)
+        @assert eachindex(yaxis) == axes(llmatrix, 1)
+
+        # Use maximum likelihood for initial proposal
+        i, j = Tuple(argmax(llmatrix))
+        y_prop, x_prop = y, x = yaxis[i], xaxis[j]
+        ll_prop = ll = linterp2(xaxis, yaxis, llmatrix, x_prop, y_prop)
+
+        # Initial jumping distribution
+        σx, σy = step(xaxis), step(yaxis)
+
+        # Allocate arrays for results
+        xdist = zeros(nsteps)
+        ydist = zeros(nsteps)
+        lldist = zeros(nsteps)
+        acceptancedist = falses(nsteps)
+
+        # Burn-in
+        for _ in 1:burnin
+            if rand() < 0.5
+                x_prop = x + randn()*σx
+            else
+                y_prop = y + randn()*σy
+            end
+            ll_prop = linterp2(xaxis, yaxis, llmatrix, x_prop, y_prop, extrapolate=NaN)
+            if log(rand()) < (ll_prop - ll)
+                x == x_prop || (σx = ℯ*abs(x-x_prop))
+                y == y_prop || (σy = ℯ*abs(y-y_prop))
+                x = x_prop
+                y = y_prop
+                ll = ll_prop
+            end
+        end
+
+        # Collect stationary distribution
+        for i in eachindex(xdist, ydist)
+            if rand() < 0.5
+                x_prop = x + randn()*σx
+            else
+                y_prop = y + randn()*σy
+            end
+            ll_prop = linterp2(xaxis, yaxis, llmatrix, x_prop, y_prop, extrapolate=NaN)
+            if log(rand()) < (ll_prop - ll)
+                x == x_prop || (σx = ℯ*abs(x-x_prop))
+                y == y_prop || (σy = ℯ*abs(y-y_prop))
+                x = x_prop
+                y = y_prop
+                ll = ll_prop
+                acceptancedist[i] = true
+            end
+            xdist[i] = x
+            ydist[i] = y
+            lldist[i] = ll
+        end
+        return xdist, ydist, lldist, acceptancedist
+    end
+    export mcmc_surface
+
 ## --- End of File
