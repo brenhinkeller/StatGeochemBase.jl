@@ -542,29 +542,15 @@
       "La"       => [1.5, 3.7]
     ```
     """
-    function elementify(data::AbstractArray;
-            importas=:Tuple,
-            skipstart::Integer=1,
-            standardize::Bool=true,
-            floattype=Float64,
-            skipnameless::Bool=true,
-            sumduplicates::Bool=false
-        )
-        elementify(data, data[firstindex(data),:];
-            importas=importas,
-            skipstart=skipstart,
-            standardize=standardize,
-            floattype=floattype,
-            skipnameless=skipnameless,
-            sumduplicates=sumduplicates)
-    end
+    elementify(data::AbstractArray; skipstart=1, kwargs...) = elementify(data, data[firstindex(data),:]; skipstart, kwargs...)
     function elementify(data::AbstractArray, elements;
             importas=:Tuple,
             skipstart::Integer=0,
             standardize::Bool=true,
             floattype=Float64,
             skipnameless::Bool=true,
-            sumduplicates::Bool=false
+            sumduplicates::Bool=false,
+            verbose::Bool=true,
         )
         if importas === :Dict || importas === :dict
             # Output as dictionary
@@ -602,10 +588,10 @@
                     treat_as_numbers = ((sum(isnumeric.(column)) >= sum(nonnumeric.(column))) || (sum(isnumeric.(lastcol)) >= sum(nonnumeric.(lastcol))))
                     if treat_as_numbers 
                         if sumduplicates
-                            @info "Duplicate key $(elements[j]) found, summing"
+                            verbose && @info "Duplicate key $(elements[j]) found, summing"
                             result[elements[j]] = nanadd(floatify.(lastcol, floattype), floatify.(column, floattype))
                         else
-                            @info "Duplicate key $(elements[j]) found, averaging"
+                            verbose && @info "Duplicate key $(elements[j]) found, averaging"
                             result[elements[j]] = nanadd(floatify.(lastcol, floattype), floatify.(column, floattype)) ./ 2.0
                         end
                     else
@@ -613,7 +599,7 @@
                         while haskey(result, elements[j]*string(n))
                             n+=1
                         end
-                        @info "Duplicate key $(elements[j]) found, replaced with $(elements[j]*string(n))"
+                        verbose && @info "Duplicate key $(elements[j]) found, replaced with $(elements[j]*string(n))"
                         elements[j] = elements[j]*string(n)
                         result[elements[j]] = columnformat(column, standardize, floattype)
                     end
