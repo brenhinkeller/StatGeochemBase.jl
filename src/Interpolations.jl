@@ -310,11 +310,9 @@
         z₊₊ = z[i₊y, i₊x]
         fx = (xq - x₋) / (x₊ - x₋)
         fy = (yq - y₋) / (y₊ - y₋)
-        return fx*fy*z₊₊ + fx*(1-fy)*z₊₋ + (1-fx)*fy*z₋₊ + (1-fx)*(1-fy)*z₋₋
-        # Alternatively:
-        # z₊ = fx*z₊₊ + (1-fx)*z₊₋
-        # z₋ = fx*z₋₊ + (1-fx)*z₋₋
-        # return fy*z₊ + (1-fy)*z₋
+        z₊ = fx*z₊₊ + (1-fx)*z₊₋
+        z₋ = fx*z₋₊ + (1-fx)*z₋₋
+        return fy*z₊ + (1-fy)*z₋
     end
     function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, extrapolate::Number)
         i₁x, iₙx = firstindex(x), lastindex(x) - 1
@@ -337,11 +335,9 @@
             z₊₊ = z[i₊y, i₊x]
             fx = (xq - x₋) / (x₊ - x₋)
             fy = (yq - y₋) / (y₊ - y₋)
-            return fx*fy*z₊₊ + fx*(1-fy)*z₊₋ + (1-fx)*fy*z₋₊ + (1-fx)*(1-fy)*z₋₋
-            # Alternatively:
-            # z₊ = fx*z₊₊ + (1-fx)*z₊₋
-            # z₋ = fx*z₋₊ + (1-fx)*z₋₋
-            # return fy*z₊ + (1-fy)*z₋
+            z₊ = fx*z₊₊ + (1-fx)*z₊₋
+            z₋ = fx*z₋₊ + (1-fx)*z₋₋
+            return fy*z₊ + (1-fy)*z₋
         else
             return T(extrapolate)
         end
@@ -349,7 +345,7 @@
 
     """
     ```julia
-    zq = linterp1(x, y, z::AbstractMatrix, xq::Number, yq::Number; extrapolate=:Bilinear)
+    zq = linterp2(x, y, z::AbstractMatrix, xq, yq; extrapolate=:Bilinear)
     ```
     Simple linear interpolation in one dimension. Given vectors of knots `x` and `y`
     and a matrix of values `z`, find the corresponding `z` values at position `xq`,`yq`.
@@ -397,6 +393,19 @@
         @assert eachindex(x) == axes(z,2) "Dimensions of `x` must match the horizontal axis of `z`"
         @assert eachindex(y) == axes(z,1) "Dimensions of `y` must match the vertical axis of `z`"
         _linterp2(x, y, z, xq, yq, extrapolate)
+    end
+    function linterp2(x, y, z::AbstractMatrix, xq, yq; extrapolate=:Bilinear)
+        @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
+        @assert issorted(y) "knot-vector `y` must be sorted in increasing order"
+        @assert eachindex(x) == axes(z,2) "Dimensions of `x` must match the horizontal axis of `z`"
+        @assert eachindex(y) == axes(z,1) "Dimensions of `y` must match the vertical axis of `z`"
+        @assert eachindex(xq) == eachindex(yq) "Dimensions of `xq` and `yq` must match"
+        # Allocate and fill result
+        zq = similar(xq, float(eltype(z)))
+        @inbounds for i in eachindex(zq)
+            zq[i] = _linterp2(x, y, z, xq[i], yq[i], extrapolate)
+        end
+        return zq
     end
     export linterp2
 

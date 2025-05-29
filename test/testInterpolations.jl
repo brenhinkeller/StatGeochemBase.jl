@@ -93,4 +93,13 @@
     @test linterp2(x,y,z,xq,yq) ≈ linterp2(x,y,z,xq,yq, extrapolate=NaN)
     @test linterp2(x,y,z,xq,yq) ≈ linterp2(x,y,z,xq,yq, extrapolate=NaN)
 
+
+    # Test 2d interpolation with a matrix of xq and yq values
+    x = 1:3
+    y = 1:4
+    z = y*x'
+    xq = repeat(x', 4, 1)
+    yq = repeat(y, 1, 3)
+    @test linterp2(x,y,z,xq,yq) ≈ z
+
 ## --- End of File
