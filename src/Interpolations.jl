@@ -6,9 +6,8 @@
         𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
         𝔦₋ = 𝔦₊ - 1
         x₋, x₊ = x[𝔦₋], x[𝔦₊]
-        y₋, y₊ = y[𝔦₋], y[𝔦₊]
         f = (xq - x₋) / (x₊ - x₋)
-        return f*y₊ + (1-f)*y₋
+        return f*y[𝔦₊] + (1-f)*y[𝔦₋]
     end
 
     function _linterp1(x, y, xq::Number, extrapolate::Number)
@@ -20,9 +19,8 @@
             𝔦₋ = knot_index
             𝔦₊ = 𝔦₋ + 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
-            y₋, y₊ = y[𝔦₋], y[𝔦₊]
             f = (xq - x₋) / (x₊ - x₋)
-            return f*y₊ + (1-f)*y₋
+            return f*y[𝔦₊] + (1-f)*y[𝔦₋]
         elseif knot_index<i₁ && x[i₁] == xq
             return T(y[i₁])
         else
@@ -45,16 +43,12 @@
         @assert extrapolate === :Linear || extrapolate === :linear
         i₁, iₙ = firstindex(x)+1, lastindex(x)
         searchsortedfirst_vec!(knot_index, x, xq)
-        @inbounds @fastmath for i ∈ eachindex(knot_index)
-            knot_index[i] = min(max(knot_index[i], i₁), iₙ)
-        end
         @inbounds @fastmath for i ∈ eachindex(knot_index, xq, yq)
-            𝔦₊ = knot_index[i]
+            𝔦₊ = min(max(knot_index[i], i₁), iₙ)
             𝔦₋ = 𝔦₊ - 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
-            y₋, y₊ = y[𝔦₋], y[𝔦₊]
             f = (xq[i] - x₋)/(x₊ - x₋)
-            yq[i] = f*y₊ + (1-f)*y₋
+            yq[i] = f*y[𝔦₊] + (1-f)*y[𝔦₋]
         end
         return yq
     end
@@ -69,9 +63,8 @@
                 𝔦₊ = 𝔦
                 𝔦₋ = 𝔦₊ - 1
                 x₋, x₊ = x[𝔦₋], x[𝔦₊]
-                y₋, y₊ = y[𝔦₋], y[𝔦₊]
                 f = (xq[i] - x₋)/(x₊ - x₋)
-                yq[i] = f*y₊ + (1-f)*y₋
+                yq[i] = f*y[𝔦₊] + (1-f)*y[𝔦₋]
             elseif first(x) == xq[i]
                 yq[i] = first(y)
             else
