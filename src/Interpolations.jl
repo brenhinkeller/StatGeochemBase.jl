@@ -1,77 +1,13 @@
-## --- 1D linear interpolation, implementation
+## --- Helper functions for fast linear interpolation and extrapolation
 
-    function _linterp1(x, y, xq::Number, extrapolate::Symbol)
-        @assert extrapolate === :linear || extrapolate === :linear
-        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
-        𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
-        𝔦₋ = 𝔦₊ - 1
-        x₋, x₊ = x[𝔦₋], x[𝔦₊]
-        f = (xq - x₋) / (x₊ - x₋)
-        return f*y[𝔦₊] + (1-f)*y[𝔦₋]
+    # For parsing kwargs
+    staticifsymbol(x::Number) = x
+    staticifsymbol(x::StaticSymbol) = x
+    function staticifsymbol(x::StaticSymbol{:Linear})
+        @warn "extrapolation mode `:Linear` is deprecated, use `:linear` instead"
+        static(:linear)
     end
-
-    function _linterp1(x, y, xq::Number, extrapolate::Number)
-        i₁, iₙ = firstindex(x), lastindex(x) - 1
-        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
-        T = float(eltype(y))
-        if i₁ <= knot_index <= iₙ
-            𝔦₋ = knot_index
-            𝔦₊ = 𝔦₋ + 1
-            x₋, x₊ = x[𝔦₋], x[𝔦₊]
-            f = (xq - x₋) / (x₊ - x₋)
-            return f*y[𝔦₊] + (1-f)*y[𝔦₋]
-        elseif knot_index<i₁ && x[i₁] == xq
-            return T(y[i₁])
-        else
-            return T(extrapolate)
-        end
-    end
-
-    # Forward to in-place version for array queries
-    function _linterp1(x, y, xq::AbstractArray, extrapolate)
-        T = float(eltype(y))
-        yq = similar(xq, T, size(xq))
-        _linterp1!(yq, x, y, xq, extrapolate)
-    end
-
-    # Allocate knot_index if not provided
-    _linterp1!(yq, x, y, xq::AbstractArray, extrapolate) = _linterp1!(yq, ones(Int, length(xq)), x, y, xq::AbstractArray, extrapolate)
-
-    # linear interpolation with linear extrapolation
-    function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Symbol)
-        @assert extrapolate === :linear || extrapolate === :linear
-        i₁, iₙ = firstindex(x)+1, lastindex(x)
-        searchsortedfirst_vec!(knot_index, x, xq)
-        @inbounds @fastmath for i ∈ eachindex(knot_index, xq, yq)
-            𝔦₊ = min(max(knot_index[i], i₁), iₙ)
-            𝔦₋ = 𝔦₊ - 1
-            x₋, x₊ = x[𝔦₋], x[𝔦₊]
-            f = (xq[i] - x₋)/(x₊ - x₋)
-            yq[i] = f*y[𝔦₊] + (1-f)*y[𝔦₋]
-        end
-        return yq
-    end
-
-    # linear interpolation with constant extrapolation
-    function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Number)
-        i₁, iₙ = firstindex(x)+1, lastindex(x)
-        searchsortedfirst_vec!(knot_index, x, xq)
-        @inbounds for i ∈ eachindex(knot_index)
-            𝔦 = knot_index[i]
-            if i₁ <= 𝔦 <= iₙ
-                𝔦₊ = 𝔦
-                𝔦₋ = 𝔦₊ - 1
-                x₋, x₊ = x[𝔦₋], x[𝔦₊]
-                f = (xq[i] - x₋)/(x₊ - x₋)
-                yq[i] = f*y[𝔦₊] + (1-f)*y[𝔦₋]
-            elseif first(x) == xq[i]
-                yq[i] = first(y)
-            else
-                yq[i] = extrapolate
-            end
-        end
-        return yq
-    end
+    staticifsymbol(x::Symbol) = staticifsymbol(static(x))
 
     # Vectorization-friendly searchsortedfirst implementation from Interpolations.jl
     # https://github.com/JuliaMath/Interpolations.jl
@@ -108,6 +44,8 @@
         end
         return ix
     end
+
+    # Additional methods specializing on specific types
     function searchsortedfirst_vec!(ix::StridedVector, v::AbstractRange, x::AbstractVector)
         lo = firstindex(v)
         hi = lastindex(v) + 1
@@ -136,13 +74,138 @@
         return ix
     end
 
+## --- 1D linear interpolation
 
-## --- 1D linear interpolation, top-level functions
+    # Implementation for scalar queries (interpolating a single number)
+    Base.@propagate_inbounds _linterp1(x, y, xq::Number, interpolate::T, ::T) where {T<:StaticSymbol} = _linterp1(x, y, xq, interpolate)
+    Base.@propagate_inbounds function _linterp1(x, y, xq::Number, interpolate::StaticSymbol, extrapolate::Number)
+        if first(x) <= xq <= last(x)
+            return _linterp1(x, y, xq, interpolate)
+        else
+            T = float(eltype(y))
+            return T(extrapolate)
+        end
+    end
+    Base.@propagate_inbounds function _linterp1(x, y, xq::Number, interpolate::StaticSymbol, extrapolate::StaticSymbol)
+        if first(x) <= xq <= last(x)
+            return _linterp1(x, y, xq, interpolate)
+        else
+            return _linterp1(x, y, xq, extrapolate)
+        end
+    end
+    Base.@propagate_inbounds function _linterp1(x, y, xq::Number, ::StaticSymbol{:linear})
+        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
+        𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
+        𝔦₋ = 𝔦₊ - 1
+        x₋, x₊ = x[𝔦₋], x[𝔦₊]
+        f = (xq - x₋) / (x₊ - x₋)
+        return f*y[𝔦₊] + (1-f)*y[𝔦₋]
+    end
+    Base.@propagate_inbounds function _linterp1(x, y, xq::Number, ::StaticSymbol{:nearest})
+        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
+        𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
+        𝔦₋ = 𝔦₊ - 1
+        x₋, x₊ = x[𝔦₋], x[𝔦₊]
+        f = (xq - x₋) / (x₊ - x₋)
+        return if f > 0.5
+            y[𝔦₊]
+        else
+            y[𝔦₋]
+        end
+    end
+
+    # Forward non-scalar queries to in-place method
+    _linterp1(x, y, xq, interpolate::StaticSymbol, extrapolate::Union{Number,StaticSymbol}) = _linterp1!(similar(xq, float(eltype(y))), x, y, xq, interpolate, extrapolate)
+
+    # In-place method
+    function _linterp1!(yq, x, y, xq, interpolate::StaticSymbol, extrapolate::Union{Number,StaticSymbol})
+        @assert eachindex(xq) == eachindex(yq)
+        @inbounds for i in eachindex(xq)
+            yq[i] = _linterp1(x, y, xq[i], interpolate, extrapolate)
+        end
+        return yq
+    end
+
+    # In-place methods with optional knot index
+    # linear interpolation with constant extrapolation
+    function _linterp1k!(yq, knot_index, x, y, xq, ::StaticSymbol{:linear}, extrapolate::Number)
+        i₁, iₙ = firstindex(x)+1, lastindex(x)
+        searchsortedfirst_vec!(knot_index, x, xq)
+        @inbounds for i ∈ eachindex(knot_index)
+            𝔦 = knot_index[i]
+            if i₁ <= 𝔦 <= iₙ
+                𝔦₊ = 𝔦
+                𝔦₋ = 𝔦₊ - 1
+                x₋, x₊ = x[𝔦₋], x[𝔦₊]
+                f = (xq[i] - x₋)/(x₊ - x₋)
+                yq[i] = f*y[𝔦₊] + (1-f)*y[𝔦₋]
+            elseif first(x) == xq[i]
+                yq[i] = first(y)
+            else
+                yq[i] = extrapolate
+            end
+        end
+        return yq
+    end
+    # nearest-neighbor interpolation with constant extrapolation
+    function _linterp1k!(yq, knot_index, x, y, xq, ::StaticSymbol{:nearest}, extrapolate::Number)
+        i₁, iₙ = firstindex(x)+1, lastindex(x)
+        searchsortedfirst_vec!(knot_index, x, xq)
+        @inbounds for i ∈ eachindex(knot_index)
+            𝔦 = knot_index[i]
+            if i₁ <= 𝔦 <= iₙ
+                𝔦₊ = 𝔦
+                𝔦₋ = 𝔦₊ - 1
+                x₋, x₊ = x[𝔦₋], x[𝔦₊]
+                f = (xq[i] - x₋)/(x₊ - x₋)
+                if f > 0.5
+                    yq[i] = y[𝔦₊]
+                else
+                    yq[i] = y[𝔦₋]
+                end
+            elseif first(x) == xq[i]
+                yq[i] = first(y)
+            else
+                yq[i] = extrapolate
+            end
+        end
+        return yq
+    end
+    # Linear interpolation and extrapolation
+    function _linterp1k!(yq, knot_index, x, y, xq, ::StaticSymbol{:linear}, ::StaticSymbol{:linear})
+        i₁, iₙ = firstindex(x)+1, lastindex(x)
+        searchsortedfirst_vec!(knot_index, x, xq)
+        @inbounds @fastmath for i ∈ eachindex(knot_index)
+            𝔦₊ = min(max(knot_index[i], i₁), iₙ)
+            𝔦₋ = 𝔦₊ - 1
+            x₋, x₊ = x[𝔦₋], x[𝔦₊]
+            f = (xq[i] - x₋)/(x₊ - x₋)
+            yq[i] = f*y[𝔦₊] + (1-f)*y[𝔦₋]
+        end
+        return yq
+    end
+    # Nearest-neighbor interpolation and extrapolation
+    function _linterp1k!(yq, knot_index, x, y, xq, ::StaticSymbol{:nearest}, ::StaticSymbol{:nearest})
+        i₁, iₙ = firstindex(x)+1, lastindex(x)
+        searchsortedfirst_vec!(knot_index, x, xq)
+        @inbounds @fastmath for i ∈ eachindex(knot_index)
+            𝔦₊ = min(max(knot_index[i], i₁), iₙ)
+            𝔦₋ = 𝔦₊ - 1
+            x₋, x₊ = x[𝔦₋], x[𝔦₊]
+            f = (xq[i] - x₋)/(x₊ - x₋)
+            if f > 0.5
+                yq[i] = y[𝔦₊]
+            else
+                yq[i] = y[𝔦₋]
+            end
+        end
+        return yq
+    end
 
 
     """
     ```julia
-    yq = linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:linear)
+    yq = linterp1(x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
     ```
     Simple linear interpolation in one dimension. Given a vector of knots `x`
     and values `y`, find the corresponding `y` values at position(s) `xq`.
@@ -175,31 +238,41 @@
      10.5
     ```
     """
-    function linterp1(x::AbstractArray, y::AbstractArray, xq; extrapolate=:linear)
+    function linterp1(x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
         @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
-        return _linterp1(x, y, xq, extrapolate)
+        @assert eachindex(x) == eachindex(y)
+        return _linterp1(x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
     end
     export linterp1
 
     """
     ```julia
-    linterp1!(yq::StridedArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:linear, knot_index=ones(Int, length(xq)))
+    linterp1!(yq::AbstractArray, [knot_index], x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
     ```
     In-place variant of `linterp1`.
+
+    An optional temporary working array `knot_index = similar(xq, Int)` may be provided if desired for performance.
     """
-    function linterp1!(yq::StridedArray, x::AbstractArray, y::AbstractArray, xq; extrapolate=:linear, knot_index::AbstractVector{Int}=ones(Int, length(xq)))
+    function linterp1!(yq, x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
         @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
-        return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
+        @assert eachindex(x) == eachindex(y)
+        @assert eachindex(xq) == eachindex(yq)
+        return _linterp1k!(yq, similar(yq, Int), x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+    end
+    function linterp1!(yq, knot_index::StridedArray{Int}, x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
+        @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
+        @assert eachindex(x) == eachindex(y)
+        @assert eachindex(knot_index) == eachindex(xq) == eachindex(yq)
+        return _linterp1k!(yq, knot_index, x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
     end
     export linterp1!
 
     """
     ```julia
-    yq = linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:linear)
+    yq = linterp1s(x::AbstractArray, y::AbstractArray, xq; interpolate=static(:linear), extrapolate=interpolate)
     ```
     As as `linterp1` (simple linear interpolation in one dimension), but will sort
-    the knots `x` and values `y` pairwise if `x` if not already sorted in
-    increasing order.
+    the knots `x` and values `y` pairwise if `x` is not already sorted in increasing order.
 
     ### Examples
     ```julia
@@ -221,73 +294,35 @@
       0.5
     ```
     """
-    function linterp1s(x::AbstractArray, y::AbstractArray, xq; extrapolate=:linear)
+    function linterp1s(x::AbstractArray, y::AbstractArray, xq; interpolate=static(:linear), extrapolate=interpolate)
+        @assert eachindex(x) == eachindex(y)
         sI = sortperm(x) # indices to construct sorted array
-        return _linterp1(x[sI], y[sI], xq, extrapolate)
+        return @inbounds _linterp1(x[sI], y[sI], xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
     end
     export linterp1s
 
     """
     ```julia
-    linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; extrapolate=:linear)
-    linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; extrapolate=:linear)
+    linterp1s!(yq, [knot_index], x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
     ```
     In-place variant of `linterp1s`.
     Will sort `x` and permute `y` to match, before interpolating at `xq` and storing the result in `yq`.
 
-    An optional temporary working array `knot_index = similar(xq, Int)` may be provided to fully eliminate allocations.
+    An optional temporary working array `knot_index = similar(xq, Int)` may be provided if desired for performance.
     """
-    function linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; extrapolate=:linear)
-        @assert length(xq) === length(yq)
-        @assert eachindex(x) === eachindex(y)
+    function linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; interpolate=static(:linear), extrapolate=interpolate)
+        @assert eachindex(x) == eachindex(y)
+        @assert eachindex(xq) == eachindex(yq)
         nanargsort!(y, x) # Sort x and permute y to match, in-place
-        return _linterp1!(yq, x, y, xq, extrapolate)
+        return _linterp1k!(yq, similar(yq, Int), x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
     end
-    function linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; extrapolate=:linear)
-        @assert eachindex(knot_index) === eachindex(yq)
-        @assert eachindex(x) === eachindex(y)
-        @assert length(yq) === length(xq)
+    function linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; interpolate=static(:linear), extrapolate=interpolate)
+        @assert eachindex(x) == eachindex(y)
+        @assert eachindex(knot_index) == eachindex(yq) == eachindex(xq)
         nanargsort!(y, x) # Sort x and permute y to match, in-place
-        return _linterp1!(yq, knot_index, x, y, xq, extrapolate)
+        return _linterp1k!(yq, knot_index, x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
     end
     export linterp1s!
-
-
-    # linearly interpolate vector y at index i, returning outboundsval if outside of bounds
-    function linterp_at_index(y::AbstractArray, i::Number, extrapolate=float(eltype(y))(NaN))
-        if firstindex(y) <= i < lastindex(y)
-            𝔦₋ = floor(Int, i)
-            𝔦₊ = 𝔦₋ + 1
-            f = i - 𝔦₋
-            return f*y[𝔦₊] + (1-f)*y[𝔦₋]
-        else
-            return extrapolate
-        end
-    end
-    export linterp_at_index
-
-
-## --- Resize and interpolate arrays of colors
-
-    # linearly interpolate array of colors at positions xq
-    function linterp1(x::AbstractArray, image::AbstractArray{<:Color}, xq)
-        # Interpolate red, green, and blue vectors separately
-        r_interp = linterp1(x, image .|> c -> c.r, xq)
-        g_interp = linterp1(x, image .|> c -> c.g, xq)
-        b_interp = linterp1(x, image .|> c -> c.b, xq)
-        # Convert back to a color
-        return RGB.(r_interp,g_interp,b_interp)
-    end
-
-    function resize_colormap(cmap::AbstractArray{<:Color}, n::Integer)
-        cNum = length(cmap)
-        if n<2
-            cmap[1:1]
-        else
-            linterp1(1:cNum,cmap,collect(range(1,cNum,length=n)))
-        end
-    end
-    export resize_colormap
 
 ## -- 2D linear interpolation
 
@@ -416,12 +451,45 @@
         @assert eachindex(x) == axes(z,2) "Dimensions of `x` must match the horizontal axis of `z`"
         @assert eachindex(y) == axes(z,1) "Dimensions of `y` must match the vertical axis of `z`"
         @assert eachindex(xq) == eachindex(yq) "Dimensions of `xq` and `yq` must match"
-        @inbounds _linterp2(x, y, z, xq, yq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        return @inbounds _linterp2(x, y, z, xq, yq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
     end
     export linterp2
 
-    # Helper functions
-    staticifsymbol(x) = x
-    staticifsymbol(x::Symbol) = static(x)
+## --- Other specialized interpolation methods
+
+    # linearly interpolate vector y at index i, returning outboundsval if outside of bounds
+    function linterp_at_index(y::AbstractArray, i::Number, extrapolate=float(eltype(y))(NaN))
+        if firstindex(y) <= i < lastindex(y)
+            𝔦₋ = floor(Int, i)
+            𝔦₊ = 𝔦₋ + 1
+            f = i - 𝔦₋
+            return f*y[𝔦₊] + (1-f)*y[𝔦₋]
+        else
+            return extrapolate
+        end
+    end
+    export linterp_at_index
+
+
+    # linearly interpolate array of colors at positions xq
+    function linterp1(x::AbstractArray, image::AbstractArray{<:Color}, xq)
+        # Interpolate red, green, and blue vectors separately
+        r_interp = linterp1(x, image .|> c -> c.r, xq)
+        g_interp = linterp1(x, image .|> c -> c.g, xq)
+        b_interp = linterp1(x, image .|> c -> c.b, xq)
+        # Convert back to a color
+        return RGB.(r_interp,g_interp,b_interp)
+    end
+
+    function resize_colormap(cmap::AbstractArray{<:Color}, n::Integer)
+        cNum = length(cmap)
+        if n<2
+            cmap[1:1]
+        else
+            linterp1(1:cNum,cmap,collect(range(1,cNum,length=n)))
+        end
+    end
+    export resize_colormap
 
 ## --- End of File
+
