@@ -31,8 +31,8 @@
     @test linterp1(1:10, 1:10, 5, extrapolate=-5) == 5
     @test isnan(linterp1(1:10, 1:10, 15, extrapolate=NaN))
     @test linterp1(1:10,1:10,0:11) == 0:11 # Default is to extrapolate
-    @test linterp1(1:10,1:10,0:11, extrapolate=:Linear) == 0:11
-    @test linterp1(1:10,1:10,0.5:10.5, extrapolate=:Linear) == 0.5:10.5
+    @test linterp1(1:10,1:10,0:11, extrapolate=:linear) == 0:11
+    @test linterp1(1:10,1:10,0.5:10.5, extrapolate=:linear) == 0.5:10.5
     @test linterp1(1:10,1:10,0.5:10.5, extrapolate=-5) == [-5; 1.5:9.5; -5]
     @test all(linterp1(1:10,1:10,0.5:10.5, extrapolate=NaN) .=== [NaN; 1.5:9.5; NaN])
     @test isnan(linterp_at_index(1:100,-10))
@@ -56,7 +56,7 @@
     @test linterp1s!(similar(xq), x, y, xq) ≈ yq
 
     xq = 0:11
-    @test linterp1!(similar(xq, Float64), 1:10, 1:10, xq, extrapolate=:Linear) == 0:11
+    @test linterp1!(similar(xq, Float64), 1:10, 1:10, xq, extrapolate=:linear) == 0:11
     xq = 0.5:10.5
     @test isequal(linterp1!(similar(xq), 1:10, 1:10, xq, extrapolate=NaN), [NaN; 1.5:9.5; NaN])
 
@@ -92,10 +92,15 @@
     z = y*x'
     @test linterp2(x,y,z,1.5,1.5) ≈ 2.25
     @test linterp2(x,y,z,1.5,1.5, extrapolate=NaN) ≈ 2.25
-    @test linterp2(x,y,z,1.5,1.5, extrapolate=:Bilinear) ≈ 2.25
+    @test linterp2(x,y,z,1.5,1.5, interpolate=:bilinear) ≈ 2.25
+    @test linterp2(x,y,z,1.6,1.6, interpolate=:nearest) ≈ 4
     @test linterp2(x,y,z,2.5,3.5) ≈ 8.75
-    @test linterp2(x,y,z,1,-10,extrapolate=:Bilinear) ≈ -10.0
-    @test linterp2(x,y,z,-10,-10,extrapolate=:Bilinear) ≈ 100
+    @test linterp2(x,y,z,1,-10,extrapolate=:bilinear) ≈ -10.0
+    @test linterp2(x,y,z,-10,-10,extrapolate=:bilinear) ≈ 100
+    @test linterp2(x,y,z,10,10,extrapolate=:bilinear) ≈ 100
+    @test linterp2(x,y,z,1,-10,extrapolate=:nearest) ≈ 1
+    @test linterp2(x,y,z,-10,-10,extrapolate=:nearest) ≈ 1
+    @test linterp2(x,y,z,10,10,extrapolate=:nearest) ≈ 12
     @test isnan(linterp2(x,y,z,1,-10,extrapolate=NaN))
     @test isnan(linterp2(x,y,z,-10,-10,extrapolate=NaN))
 
@@ -116,5 +121,6 @@
     xq = repeat(x', 4, 1)
     yq = repeat(y, 1, 3)
     @test linterp2(x,y,z,xq,yq) ≈ z
+    @test linterp2(x,y,z,xq,yq, interpolate=:nearest) ≈ z
 
 ## --- End of File

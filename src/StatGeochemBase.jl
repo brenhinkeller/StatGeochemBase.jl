@@ -1,8 +1,8 @@
 module StatGeochemBase
 
     using NaNStatistics
-
     using SpecialFunctions: erf, erfc, erfcx, erfinv
+    using Static
 
 
     const Collection{T} = Union{AbstractArray{<:T}, AbstractRange{<:T}, NTuple{N,T}} where N
