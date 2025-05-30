@@ -1,3 +1,18 @@
+## --- Test interpolation-related utilities
+    v1 = Base.OneTo(100)
+    v2 = 1:100
+    v3 = 1:100.
+    v4 = collect(v3)
+
+    x = 110*rand(1000) .- 5
+    ix = zeros(Int, length(x))
+    @test searchsortedfirst.(Ref(v1),x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v1, x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v2, x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v3, x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v4, x) 
+
+    v2 = 10:90
+    v3 = 10:90.
+    v4 = collect(v3)
+    @test searchsortedfirst.(Ref(v2),x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v2, x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v3, x) == StatGeochemBase.searchsortedfirst_vec!(copy(ix), v4, x) 
+
 ## --- Test 1-D interpolations
 
     # Interpolation

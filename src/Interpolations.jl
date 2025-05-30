@@ -138,6 +138,33 @@
         end
         return ix
     end
+    function searchsortedfirst_vec!(ix::StridedVector, v::AbstractRange, x::AbstractVector)
+        lo = firstindex(v)
+        hi = lastindex(v) + 1
+        δ = first(v) - lo
+        λ = step(v)
+        @inbounds for i ∈ eachindex(x, ix)
+            ix[i] = min(max(ceil(Int, (x[i] - δ)/λ), lo), hi)
+        end
+        return ix
+    end
+    function searchsortedfirst_vec!(ix::StridedVector, v::UnitRange, x::AbstractVector)
+        lo = firstindex(v)
+        hi = lastindex(v) + 1
+        δ = first(v) - lo
+        @inbounds for i ∈ eachindex(x, ix)
+            ix[i] = min(max(ceil(Int, x[i] - δ), lo), hi)
+        end
+        return ix
+    end
+    function searchsortedfirst_vec!(ix::StridedVector, v::Base.OneTo, x::AbstractVector)
+        lo = firstindex(v)
+        hi = lastindex(v) + 1
+        @inbounds for i ∈ eachindex(x, ix)
+            ix[i] = min(max(ceil(Int, x[i]), lo), hi)
+        end
+        return ix
+    end
 
 
 ## --- 1D Linear interpolation, top-level functions
