@@ -2,9 +2,9 @@
 
     function _linterp1(x, y, xq::Number, extrapolate::Symbol)
         @assert extrapolate === :Linear || extrapolate === :linear
-        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
-        𝔦₋ = min(max(knot_index, firstindex(x)), lastindex(x) - 1)
-        𝔦₊ = 𝔦₋ + 1
+        knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
+        𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
+        𝔦₋ = 𝔦₊ - 1
         x₋, x₊ = x[𝔦₋], x[𝔦₊]
         y₋, y₊ = y[𝔦₋], y[𝔦₊]
         f = (xq - x₋) / (x₊ - x₋)
@@ -41,36 +41,16 @@
     _linterp1!(yq, x, y, xq::AbstractArray, extrapolate) = _linterp1!(yq, ones(Int, length(xq)), x, y, xq::AbstractArray, extrapolate)
 
     # Linear interpolation with linear extrapolation
-    function _linterp1!(yq, knot_index, x::DenseArray, y::DenseArray, xq::AbstractArray, extrapolate::Symbol)
+    function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Symbol)
         @assert extrapolate === :Linear || extrapolate === :linear
-        i₁, iₙ = firstindex(x), lastindex(x) - 1
+        i₁, iₙ = firstindex(x)+1, lastindex(x)
         searchsortedfirst_vec!(knot_index, x, xq)
-        knot_index .-= 1
         @inbounds @fastmath for i ∈ eachindex(knot_index)
             knot_index[i] = min(max(knot_index[i], i₁), iₙ)
         end
         @inbounds @fastmath for i ∈ eachindex(knot_index, xq, yq)
-            𝔦₋ = knot_index[i]
-            𝔦₊ = 𝔦₋ + 1
-            x₋, x₊ = x[𝔦₋], x[𝔦₊]
-            y₋, y₊ = y[𝔦₋], y[𝔦₊]
-            f = (xq[i] - x₋)/(x₊ - x₋)
-            yq[i] = f*y₊ + (1-f)*y₋
-        end
-        return yq
-    end
-    # Fallback method
-    function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Symbol)
-        @assert extrapolate === :Linear
-        i₁, iₙ = firstindex(x), lastindex(x) - 1
-        searchsortedfirst_vec!(knot_index, x, xq)
-        knot_index .-= 1
-        @inbounds for i ∈ eachindex(knot_index)
-            knot_index[i] = min(max(knot_index[i], i₁), iₙ)
-        end
-        @inbounds for i ∈ eachindex(knot_index, xq, yq)
-            𝔦₋ = knot_index[i]
-            𝔦₊ = 𝔦₋ + 1
+            𝔦₊ = knot_index[i]
+            𝔦₋ = 𝔦₊ - 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
             y₋, y₊ = y[𝔦₋], y[𝔦₊]
             f = (xq[i] - x₋)/(x₊ - x₋)
@@ -81,20 +61,19 @@
 
     # Linear interpolation with constant extrapolation
     function _linterp1!(yq, knot_index, x, y, xq::AbstractArray, extrapolate::Number)
-        i₁, iₙ = firstindex(x), lastindex(x) - 1
+        i₁, iₙ = firstindex(x)+1, lastindex(x)
         searchsortedfirst_vec!(knot_index, x, xq)
-        knot_index .-= 1
         @inbounds for i ∈ eachindex(knot_index)
             𝔦 = knot_index[i]
             if i₁ <= 𝔦 <= iₙ
-                𝔦₋ = 𝔦
-                𝔦₊ = 𝔦₋ + 1
+                𝔦₊ = 𝔦
+                𝔦₋ = 𝔦₊ - 1
                 x₋, x₊ = x[𝔦₋], x[𝔦₊]
                 y₋, y₊ = y[𝔦₋], y[𝔦₊]
                 f = (xq[i] - x₋)/(x₊ - x₋)
                 yq[i] = f*y₊ + (1-f)*y₋
-            elseif 𝔦<i₁ && x[i₁] == xq[i]
-                yq[i] = y[i₁]
+            elseif first(x) == xq[i]
+                yq[i] = first(y)
             else
                 yq[i] = extrapolate
             end
@@ -104,30 +83,29 @@
 
     # Vectorization-friendly searchsortedfirst implementation from Interpolations.jl
     # https://github.com/JuliaMath/Interpolations.jl
-    Base.@propagate_inbounds function searchsortedfirst_exp_left(v, xx, lo, hi)
+    Base.@propagate_inbounds function searchsortedfirst_exp_left(v, xᵢ, lo, hi)
         for i in 0:4
             ind = lo + i
             ind > hi && return ind
-            xx <= v[ind] && return ind
+            xᵢ <= v[ind] && return ind
         end
         n = 3
         tn2 = 2^n
         tn2m1 = 2^(n-1)
         ind = lo + tn2
         while ind <= hi
-            xx <= v[ind] && return searchsortedfirst(v, xx, lo + tn2 - tn2m1, ind, Base.Order.Forward)
+            xᵢ <= v[ind] && return searchsortedfirst(v, xᵢ, lo + tn2 - tn2m1, ind, Base.Order.Forward)
             tn2 *= 2
             tn2m1 *= 2
             ind = lo + tn2
         end
-        return searchsortedfirst(v, xx, lo + tn2 - tn2m1, hi, Base.Order.Forward)
+        return searchsortedfirst(v, xᵢ, lo + tn2 - tn2m1, hi, Base.Order.Forward)
     end
 
     function searchsortedfirst_vec!(ix::StridedVector, v::AbstractVector, x::AbstractVector)
-        @assert firstindex(v) === 1
         if issorted(x)
-            lo = 1
-            hi = length(v)
+            lo = firstindex(v)
+            hi = lastindex(v)
             @inbounds for i ∈ eachindex(x, ix)
                 y = searchsortedfirst_exp_left(v, x[i], lo, hi)
                 ix[i] = y
@@ -323,13 +301,13 @@
 
     function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, extrapolate::Symbol)
         @assert extrapolate === :Bilinear || extrapolate === :bilinear
-        x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
-        i₋x = min(max(x_knot_index, firstindex(x)), lastindex(x) - 1)
-        i₊x = i₋x + 1
+        x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
+        i₊x = min(max(x_knot_index, firstindex(x)+1), lastindex(x))
+        i₋x = i₊x - 1
         x₋, x₊ = x[i₋x], x[i₊x]
-        y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) - 1
-        i₋y = min(max(y_knot_index, firstindex(y)), lastindex(y) - 1)
-        i₊y = i₋y + 1
+        y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) 
+        i₊y = min(max(y_knot_index, firstindex(y)+1), lastindex(y))
+        i₋y = i₊y - 1
         y₋, y₊ = y[i₋y], y[i₊y]
         z₋₋ = z[i₋y, i₋x]
         z₋₊ = z[i₋y, i₊x]
@@ -342,19 +320,19 @@
         return fy*z₊ + (1-fy)*z₋
     end
     function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, extrapolate::Number)
-        i₁x, iₙx = firstindex(x), lastindex(x) - 1
-        x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering()) - 1
+        i₁x, iₙx = firstindex(x)+1, lastindex(x)
+        x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
         first(x)==xq && (x_knot_index = i₁x)
-        i₁y, iₙy = firstindex(y), lastindex(y) - 1
-        y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) - 1
+        i₁y, iₙy = firstindex(y)+1, lastindex(y)
+        y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering())
         first(y)==yq && (y_knot_index = i₁y)
         T = float(eltype(z))
         if (i₁x <= x_knot_index <= iₙx) && (i₁y <= y_knot_index <= iₙy)
-            i₋x = x_knot_index
-            i₊x = i₋x + 1
+            i₊x = x_knot_index
+            i₋x = i₊x - 1
             x₋, x₊ = x[i₋x], x[i₊x]
-            i₋y = y_knot_index
-            i₊y = i₋y + 1
+            i₊y = y_knot_index
+            i₋y = i₊y - 1
             y₋, y₊ = y[i₋y], y[i₊y]
             z₋₋ = z[i₋y, i₋x]
             z₋₊ = z[i₋y, i₊x]
