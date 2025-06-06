@@ -932,11 +932,10 @@
     """
     function renormalize!(dataset::Union{Dict,NamedTuple}, elements=keys(dataset); total=1.0)
         # Note that this assumes all variables in the dataset are the same length!
-        current_sum = zeros(size(dataset[first(keys(dataset))]))
+        current_sum = zeros(size(dataset[first(elements)]))
         for e in elements
-            current_sum .+= dataset[e] .|> x -> isnan(x) ? 0 : x
+            nanadd!(current_sum, dataset[e])
         end
-        current_sum[current_sum .== 0] .= NaN
 
         for e in elements
             dataset[e] .*= total ./ current_sum

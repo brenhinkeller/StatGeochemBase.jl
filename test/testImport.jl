@@ -165,7 +165,11 @@ d = concatenatedatasets(a,b,a,b,a; elements=(:La,))
 @test isa(d, NamedTuple)
 @test isequal(d.La, [a.La; b.La; a.La; b.La; a.La])
 
-@test hashdataset(d) == [0x69f0025597bf6523, 0xe8341bcc0a64d447, 0x69f0025597bf6523, 0x6eb8871cf9477895, 0x4f3831d3feae830b, 0x69f0025597bf6523, 0xe8341bcc0a64d447, 0x69f0025597bf6523, 0x6eb8871cf9477895, 0x4f3831d3feae830b, 0x69f0025597bf6523, 0xe8341bcc0a64d447]
+@static if VERSION <= v"1.12"
+    @test hashdataset(d) == [0x69f0025597bf6523, 0xe8341bcc0a64d447, 0x69f0025597bf6523, 0x6eb8871cf9477895, 0x4f3831d3feae830b, 0x69f0025597bf6523, 0xe8341bcc0a64d447, 0x69f0025597bf6523, 0x6eb8871cf9477895, 0x4f3831d3feae830b, 0x69f0025597bf6523, 0xe8341bcc0a64d447]
+else
+    @test hashdataset(d) == [0xabef1a7078d16bf3, 0x05b25ae3a4172bba, 0xabef1a7078d16bf3, 0x7cfbb5f4fc52fc31, 0x55357c2b084bb8de, 0xabef1a7078d16bf3, 0x05b25ae3a4172bba, 0xabef1a7078d16bf3, 0x7cfbb5f4fc52fc31, 0x55357c2b084bb8de, 0xabef1a7078d16bf3, 0x05b25ae3a4172bba]
+end
 
 ## --- Clean up
 
