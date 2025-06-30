@@ -86,10 +86,24 @@
     @test midpointquadrature(1:10, ones(10)) == 10
 
     # Distributions
-    A = draw_from_distribution(ones(100), 10000)::AbstractArray
+    A = draw_from_distribution(ones(100))
+    @test A isa Float64
+    @test 0 <= A <= 1
+
+    A = draw_from_distribution(ones(100), 10000)
+    @test A isa Array{Float64}
     @test length(A) == 10000
     @test isapprox(nanmean(A), 0.5, atol=0.08)
     @test isapprox(nanstd(A), sqrt(1/12), atol=0.08)
+    @test all(0 .< A .< 1)
+
+    A = draw_from_distribution(ones(100), 100, 100)
+    @test A isa Array{Float64}
+    @test size(A) == (100,100)
+    @test length(A) == 10000
+    @test isapprox(nanmean(A), 0.5, atol=0.08)
+    @test isapprox(nanstd(A), sqrt(1/12), atol=0.08)
+    @test all(0 .< A .< 1)
 
     # Strings
     @test contains("JuliaLang is pretty cool!", "Julia")

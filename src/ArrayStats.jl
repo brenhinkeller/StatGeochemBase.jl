@@ -650,7 +650,7 @@
 
     """
     ```julia
-    draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
+    draw_from_distribution(dist::Collection{AbstractFloat}, [dims...])
     ```
     Draw `n` random floating point numbers from a continuous probability distribution
     specified by a collection `dist` defining the PDF curve thereof.
@@ -668,10 +668,23 @@
      0.6351766227803024    
     ```
     """
-    function draw_from_distribution(dist::Collection{AbstractFloat}, n::Integer)
-        x = Array{eltype(dist)}(undef, n)
-        draw_from_distribution!(x, dist)
-        return x
+    draw_from_distribution(dist::Collection{AbstractFloat}, dims...) = draw_from_distribution!(similar(dist, dims...), dist)
+    Base.@propagate_inbounds function draw_from_distribution(dist::Collection{T}) where {T<:AbstractFloat}
+        i0 = firstindex(dist)
+        dist_xmax = prevfloat(T(length(dist) - i0))
+        dist_ymax = maximum(dist)
+
+        while true
+            # Pick random x value
+            rrx = rand(T)
+            rx = rrx * dist_xmax
+            # Interpolate corresponding distribution value
+            f = floor(Int,rx)
+            y = dist[f+i0+1]*(rx-f) + dist[f+i0]*(1-(rx-f))
+            # See if x value is accepted
+            ry = rand(T) * dist_ymax
+            (y > ry) && return rrx
+        end
     end
     export draw_from_distribution
 
@@ -685,27 +698,12 @@
     """
     function draw_from_distribution!(x::DenseArray{<:AbstractFloat}, dist::Collection{AbstractFloat})
         # Fill the array x with random numbers from the distribution 'dist'
-        dist_ymax = maximum(dist)
-        dist_xmax = prevfloat(length(dist) - 1.0)
-
         @inbounds for i ∈ eachindex(x)
-            while true
-                # Pick random x value
-                rx = rand(eltype(x)) * dist_xmax
-                # Interpolate corresponding distribution value
-                f = floor(Int,rx)
-                y = dist[f+2]*(rx-f) + dist[f+1]*(1-(rx-f))
-                # See if x value is accepted
-                ry = rand(Float64) * dist_ymax
-                if (y > ry)
-                    x[i] = rx / dist_xmax
-                    break
-                end
-            end
+            x[i] = draw_from_distribution(dist)
         end
+        return x
     end
     export draw_from_distribution!
-
 
 ## --- Numerically integrate a 1-d distribution
 
