@@ -14,6 +14,8 @@
     `x` is assumed to be the independent variable (i.e., the x-y points are
     plotted in order of increasing `x`).
 
+    See also `image_from_paths!`
+
     ### Examples
     ```julia
     julia> nsims = 1000
@@ -27,10 +29,27 @@
     ([8 15 … 9 11; 12 4 … 14 11; … ; 9 15 … 9 9; 10 17 … 10 14], -3.715247394908744:0.1523101612461508:3.747950506152645, -3.86556932981587:0.1497772964483582:3.4735181961536803)
     ```
     """
-    image_from_paths(xpoints, ypoints; xresolution::Int=1800, yresolution::Int=1200, xrange=nanextrema(xpoints), yrange=nanextrema(ypoints)) = image_from_paths!(copy(xpoints), copy(ypoints); xresolution, yresolution, xrange, yrange)
+    image_from_paths(xpoints, ypoints; kwargs...) = image_from_paths!(copy(xpoints), copy(ypoints); kwargs...)
     export image_from_paths
 
-    function image_from_paths!(xpoints::AbstractMatrix, ypoints::AbstractMatrix; xresolution::Int=1800, yresolution::Int=1200, xrange=nanextrema(xpoints), yrange=nanextrema(ypoints))
+    """
+    ```julia
+    image_from_paths!([imgcounts::AbstractMatrix], xpoints::AbstractMatrix, ypoints::AbstractMatrix; 
+        xresolution::Int=1800, 
+        yresolution::Int=1200, 
+        xrange=nanextrema(xpoints), 
+        yrange=nanextrema(ypoints),
+    )
+    ```
+    As `image_from_paths`, but will sort `xpoints`  (as required for interpolation) 
+    in-place rather than making a copy.
+
+    Optionally, a result matrix `imgcounts` may be supplied for fully in-place operation, 
+    in which case `yresolution, xresolution = size(imgcounts)`
+    """
+    image_from_paths!(xpoints::AbstractMatrix, ypoints::AbstractMatrix; xresolution::Int=1800, yresolution::Int=1200, kwargs...) = image_from_paths!(zeros(Int, yresolution, xresolution), xpoints, ypoints; kwargs...)
+    function image_from_paths!(imgcounts::AbstractMatrix, xpoints::AbstractMatrix, ypoints::AbstractMatrix; xrange=nanextrema(xpoints), yrange=nanextrema(ypoints))
+        yresolution, xresolution = size(imgcounts)
         @assert axes(xpoints, 1) == axes(ypoints, 1)
         nsims = size(xpoints, 2)
         @assert axes(xpoints, 2) == axes(ypoints, 2) == Base.OneTo(nsims)
@@ -47,9 +66,6 @@
         interpyknots = zeros(Int, xresolution)
         # interpxdist = zeros(yresolution, batchsize)
         # interpxknots = zeros(Int, yresolution)
-
-        # Output image
-        imgcounts = zeros(Int, yresolution, xresolution)
 
         # Loop through batches
         n₀ = 0
