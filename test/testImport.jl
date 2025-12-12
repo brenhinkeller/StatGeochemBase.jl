@@ -42,21 +42,21 @@ add = elementify(addtest, importas=:Dict, sumduplicates=true)
 
 ## --- Import / export functions
 
-@test exportdataset(datatuple, "tupledataset.csv", ',') == nothing
+@test exportdataset(datatuple, "tupledataset.csv", ',') === nothing
 @test importdataset("tupledataset.csv", importas=:Tuple) == datatuple
 @test importdataset("tupledataset.csv", ',', importas=:Tuple, elements=elements, skipstart=1) == datatuple
 @test importdataset("tupledataset.csv", ',', importas=:Tuple, elements=(elements...,), skipstart=1) == datatuple
 
-@test exportdataset(datatuple, "tupledataset.tsv") == nothing
+@test exportdataset(datatuple, "tupledataset.tsv") === nothing
 @test importdataset("tupledataset.tsv", '\t', importas=:Tuple) == datatuple
 
-@test exportdataset(datatuple, "tupledataset.csv", ',', digits=6) == nothing
+@test exportdataset(datatuple, "tupledataset.csv", ',', digits=6) === nothing
 @test importdataset("tupledataset.csv", ',', importas=:Tuple).Lv == round.(datatuple.Lv, digits=6)
 
-@test exportdataset(datatuple, "tupledataset.csv", ',', sigdigits=5) == nothing
+@test exportdataset(datatuple, "tupledataset.csv", ',', sigdigits=5) === nothing
 @test importdataset("tupledataset.csv", ',', importas=:Tuple).Lv == round.(datatuple.Lv, sigdigits=5)
 
-@test exportdataset(datadict, datadict["elements"], "dictdataset.csv", ',') == nothing
+@test exportdataset(datadict, datadict["elements"], "dictdataset.csv", ',') === nothing
 @test importdataset("dictdataset.csv", importas=:Dict, mindefinedcolumns=2) == datadict
 @test importdataset("dictdataset.csv", ',', importas=:Dict, elements=elements, skipstart=1) == datadict
 @test importdataset("dictdataset.csv", ',', importas=:Dict, elements=(elements...,), skipstart=1) == datadict
@@ -165,7 +165,7 @@ d = concatenatedatasets(a,b,a,b,a; elements=(:La,))
 @test isa(d, NamedTuple)
 @test isequal(d.La, [a.La; b.La; a.La; b.La; a.La])
 
-@static if VERSION <= v"1.12"
+@static if VERSION < v"1.13"
     @test hashdataset(d) == [0x69f0025597bf6523, 0xe8341bcc0a64d447, 0x69f0025597bf6523, 0x6eb8871cf9477895, 0x4f3831d3feae830b, 0x69f0025597bf6523, 0xe8341bcc0a64d447, 0x69f0025597bf6523, 0x6eb8871cf9477895, 0x4f3831d3feae830b, 0x69f0025597bf6523, 0xe8341bcc0a64d447]
 else
     @test hashdataset(d) == [0xabef1a7078d16bf3, 0x05b25ae3a4172bba, 0xabef1a7078d16bf3, 0x7cfbb5f4fc52fc31, 0x55357c2b084bb8de, 0xabef1a7078d16bf3, 0x05b25ae3a4172bba, 0xabef1a7078d16bf3, 0x7cfbb5f4fc52fc31, 0x55357c2b084bb8de, 0xabef1a7078d16bf3, 0x05b25ae3a4172bba]

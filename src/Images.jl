@@ -39,33 +39,55 @@
         yresolution::Int=1200, 
         xrange=nanextrema(xpoints), 
         yrange=nanextrema(ypoints),
+        method=:nearest,
     )
     ```
-    As `image_from_paths`, but will sort `xpoints`  (as required for interpolation) 
+    As `image_from_paths`, but may sort `xpoints`  (as required for interpolation) 
     in-place rather than making a copy.
 
     Optionally, a result matrix `imgcounts` may be supplied for fully in-place operation, 
     in which case `yresolution, xresolution = size(imgcounts)`
+
+    Available line-drawing `method`s include 
+        `:interpolate`, which interpolates the independent variable (y) as a function of the dependent variable (x)
+        `:closest`, which attempts to find the 
     """
     image_from_paths!(xpoints::AbstractMatrix, ypoints::AbstractMatrix; xresolution::Int=1800, yresolution::Int=1200, kwargs...) = image_from_paths!(zeros(Int, yresolution, xresolution), xpoints, ypoints; kwargs...)
-    function image_from_paths!(imgcounts::AbstractMatrix, xpoints::AbstractMatrix, ypoints::AbstractMatrix; xrange=nanextrema(xpoints), yrange=nanextrema(ypoints))
-        yresolution, xresolution = size(imgcounts)
-        @assert axes(xpoints, 1) == axes(ypoints, 1)
-        nsims = size(xpoints, 2)
-        @assert axes(xpoints, 2) == axes(ypoints, 2) == Base.OneTo(nsims)
+    function image_from_paths!(imgcounts::AbstractMatrix, xpoints::AbstractMatrix, ypoints::AbstractMatrix; 
+            xrange=nanextrema(xpoints), 
+            yrange=nanextrema(ypoints),
+            method::Symbol=:nearest,
+        )
 
         # Bin edges and centers
+        yresolution, xresolution = size(imgcounts)
         xbinedges = range(first(xrange), last(xrange), length=xresolution+1)
         xq = cntr(xbinedges)
         ybinedges = range(first(yrange), last(yrange), length=yresolution+1)
         yq = cntr(ybinedges)
+        # Decide method
+        (method === :interpolate || method === :nearest) || @warn "Method $method not recognized, falling back to :nearest"
+        if method===:interpolate
+            interpolate_pixels!(imgcounts, xpoints, ypoints, xq, ybinedges)
+        else
+            nearest_pixels!(imgcounts, xpoints, ypoints, xq, yq)
+        end
+        return imgcounts, xq, yq
+    end
+    export image_from_paths!
+
+    function interpolate_pixels!(imgcounts, xpoints, ypoints, xq, ybinedges)
+        @assert axes(xpoints, 1) == axes(ypoints, 1)
+        nsims = size(xpoints, 2)
+        @assert axes(xpoints, 2) == axes(ypoints, 2) == Base.OneTo(nsims)
+        yresolution, xresolution = size(imgcounts)
+        @assert length(xq) == xresolution
+        @assert length(ybinedges) == yresolution + 1
 
         # Use batches to avoid allocating massive intermediate arrays
         batchsize = min(nsims, 1000)
         interpydist = zeros(xresolution, batchsize)
         interpyknots = zeros(Int, xresolution)
-        # interpxdist = zeros(yresolution, batchsize)
-        # interpxknots = zeros(Int, yresolution)
 
         # Loop through batches
         n₀ = 0
@@ -95,10 +117,76 @@
                 histcounts!(view(imgcounts,:,i), view(interpydist,i,1:nextra), ybinedges)
             end
         end
-
-        return imgcounts, xq, yq
+        return imgcounts
     end
-    export image_from_paths!
+    function nearest_pixels!(imgcounts, xpoints, ypoints, xq, yq)
+        npoints = size(xpoints, 1)
+        @assert axes(xpoints, 1) == axes(ypoints, 1) == Base.OneTo(npoints)
+        nsims = size(xpoints, 2)
+        @assert axes(xpoints, 2) == axes(ypoints, 2) == Base.OneTo(nsims)
+        @assert eachindex(yq) == axes(imgcounts,1)
+        @assert eachindex(xq) == axes(imgcounts,2)
+        
+        # Allocate buffers
+        x = zeros(size(xpoints,1))
+        y = zeros(size(xpoints,1))
+
+        # Loop through each set of paths
+        for n in Base.OneTo(nsims)
+            # Copy x and y points to buffers
+            copyto!(x, 1, xpoints, 1+(n-1)*npoints, npoints)
+            copyto!(y, 1, ypoints, 1+(n-1)*npoints, npoints)
+            # Sort x and permute y to match, in-place
+            nanargsort!(y, x) 
+            # Convert to image coordinates
+            x .-= first(xq)
+            x ./= step(xq)
+            x .+= firstindex(xq)
+            y .-= first(yq)
+            y ./= step(yq)
+            y .+= firstindex(yq)
+            for i in Base.OneTo(npoints-1)
+                Δx = x[i+1] - x[i]
+                isnan(Δx) && break
+                Δy = y[i+1] - y[i]
+                isnan(Δy) && break
+                s = Δy/Δx
+                if abs(s) > 1
+                    # Steep line
+                    # Raster vertically (by y) and find closest x pixel at each y
+                    sinv = Δx/Δy
+                    p_start, p_end = (s > 1) ? (i, i+1) : (i+1, i)
+                    y_start, y_end = y[p_start], y[p_end]
+                    xi = x[p_start]
+                    iy = ceil(Int, y_start)
+                    while iy < y_end
+                        ix = round(Int, xi)
+                        if (firstindex(xq) <= ix <= lastindex(xq)) && (firstindex(yq) <= iy <= lastindex(yq))
+                            imgcounts[iy, ix] += 1
+                        end
+                        iy += 1
+                        xi += sinv
+                    end
+                else
+                    # Shallow line
+                    # Raster horizontally (by x) and find closest y pixel at each x
+                    x_start, x_end = x[i], x[i+1]
+                    yi = y[i]
+                    ix = ceil(Int, x_start)
+                    while ix < x_end
+                        iy = round(Int, yi)
+                        if (firstindex(xq) <= ix <= lastindex(xq)) && (firstindex(yq) <= iy <= lastindex(yq))
+                            imgcounts[iy, ix] += 1
+                        end
+                        ix += 1
+                        yi += s
+                    end
+                end
+            end
+        end
+
+        return imgcounts
+    end
 
 ## --- Map colormaps to images
 
