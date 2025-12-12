@@ -144,12 +144,13 @@
     """
     function count_unique!(A)
         issorted(A) || sort!(A)
-        n = 1
-        last = A[1]
-        @inbounds for i=2:length(A)
+        n = firstindex(A)
+        last = first(A)
+        @inbounds for i in Iterators.drop(eachindex(A), 1)
             if A[i] != last
                 n += 1
-                last = A[n] = A[i]
+                last = A[i]
+                A[n], A[i] = A[i], A[n]
             end
         end
         return n
