@@ -58,6 +58,7 @@
     @test linterp1(1:10,1:10,0.5:10.5, interpolate=:nearest, extrapolate=NaN) ≈ [NaN; 1:9; NaN] nans=true
     @test isnan(linterp_at_index(1:100,-10))
     @test linterp_at_index(1:100,-10, 0) == 0
+    @test linterp_at_index(1:100, 100, 0) == 100
 
     # In-place
     xq = 3:7

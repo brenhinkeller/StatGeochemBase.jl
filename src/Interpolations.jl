@@ -464,6 +464,8 @@
             𝔦₊ = 𝔦₋ + 1
             f = i - 𝔦₋
             return f*y[𝔦₊] + (1-f)*y[𝔦₋]
+        elseif i == lastindex(y)
+            return last(y)
         else
             return extrapolate
         end
