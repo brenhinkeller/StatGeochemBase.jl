@@ -43,7 +43,7 @@ add = elementify(addtest, importas=:Dict, sumduplicates=true)
 ## --- Import / export functions
 
 @test exportdataset(datatuple, "tupledataset.csv", ',') === nothing
-@test importdataset("tupledataset.csv", importas=:Tuple, skipnameless=true) == datatuple
+@test importdataset("tupledataset.csv", importas=:Tuple, skipnameless=false) == datatuple
 @test importdataset("tupledataset.csv", ',', importas=:Tuple, elements=elements, skipstart=1) == datatuple
 @test importdataset("tupledataset.csv", ',', importas=:Tuple, elements=(elements...,), skipstart=1) == datatuple
 

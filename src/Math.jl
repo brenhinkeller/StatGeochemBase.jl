@@ -180,19 +180,19 @@
     function rescale(y::AbstractArray, min::Number=0, max::Number=1)
         obsmin, obsmax = nanextrema(y)
         y = float.(y) .- obsmin
-        y .*= (max - min) / obsmax
+        y .*= (max - min) / (obsmax - obsmin)
         return y .+= min
     end
     function rescale(y::AbstractRange, min::Number=0, max::Number=1)
         obsmin, obsmax = nanextrema(y)
         y = float(y) .- obsmin
-        y = y .* ((max-min) / obsmax)
+        y = y .* ((max-min) / (obsmax - obsmin))
         return y .+ min
     end
     function rescale(y, min::Number=0, max::Number=1)
         obsmin, obsmax = nanextrema(y)
         y = float.(y) .- obsmin
-        y = y .* ((max-min) / obsmax)
+        y = y .* ((max-min) / (obsmax - obsmin))
         return y .+ min
     end
     export rescale
@@ -372,7 +372,7 @@
     function normcdf_ll(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_sigma = 1/sigma
         ll = zero(typeof(inv_sigma))
-        @inbounds for i ∈ eachindex(x)
+        @inbounds for i ∈ eachindex(x,mu)
             xₛ = (x[i] - mu[i]) * inv_sigma
             ll += normcdf_ll(xₛ)
         end
@@ -380,7 +380,7 @@
     end
     function normcdf_ll(mu::Number,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @inbounds for i ∈ eachindex(x)
+        @inbounds for i ∈ eachindex(x,sigma)
             xₛ = (x[i] - mu) / sigma[i]
             ll += normcdf_ll(xₛ)
         end
@@ -388,7 +388,7 @@
     end
     function normcdf_ll(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
         ll = zero(float(eltype(sigma)))
-        @inbounds for i ∈ eachindex(x)
+        @inbounds for i ∈ eachindex(x,mu,sigma)
             xₛ = (x[i] - mu[i]) / sigma[i]
             ll += normcdf_ll(xₛ)
         end
@@ -431,7 +431,7 @@
     end
     function normcdf_ll!(mu::AbstractArray,sigma::Number,x::AbstractArray)
         inv_sigma = 1/sigma
-        @inbounds for i ∈ eachindex(x)
+        @inbounds for i ∈ eachindex(x,mu)
             xₛ = (x[i] - mu[i]) * inv_sigma
             x[i] = normcdf_ll(xₛ)
         end
@@ -442,7 +442,7 @@
         return ll
     end
     function normcdf_ll!(mu::Number,sigma::AbstractArray,x::AbstractArray)
-        @inbounds for i ∈ eachindex(x)
+        @inbounds for i ∈ eachindex(x,sigma)
             xₛ = (x[i] - mu) / sigma[i]
             x[i] = normcdf_ll(xₛ)
         end
@@ -453,7 +453,7 @@
         return ll
     end
     function normcdf_ll!(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
-        @inbounds for i ∈ eachindex(x)
+        @inbounds for i ∈ eachindex(x,mu)
             xₛ = (x[i] - mu[i]) / sigma[i]
             x[i] = normcdf_ll(xₛ)
         end

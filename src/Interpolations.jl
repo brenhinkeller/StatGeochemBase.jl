@@ -54,7 +54,7 @@
         @inbounds for i ∈ eachindex(x, ix)
             ixᵢ = x[i]/λ - δ
             if ixᵢ < hi
-                ix[i] = max(ceil(Int, ixᵢ), lo)
+                ix[i] = ceil(Int, max(ixᵢ, lo))
             else
                 ix[i] = hi
             end
@@ -68,7 +68,7 @@
         @inbounds for i ∈ eachindex(x, ix)
             ixᵢ = x[i] - δ
             if ixᵢ < hi
-                ix[i] = max(ceil(Int, ixᵢ), lo)
+                ix[i] = ceil(Int, max(ixᵢ, lo))
             else
                 ix[i] = hi
             end
@@ -79,7 +79,7 @@
         hi = lastindex(v) + 1
         @inbounds for i ∈ eachindex(x, ix)
             if x[i] < hi
-                ix[i] = max(ceil(Int, x[i]), 1)
+                ix[i] = ceil(Int, max(x[i], 1))
             else
                 ix[i] = hi
             end
@@ -478,7 +478,7 @@
             f = i - 𝔦₋
             return f*y[𝔦₊] + (1-f)*y[𝔦₋]
         elseif i == lastindex(y)
-            return last(y)
+            return float(last(y))
         else
             return extrapolate
         end

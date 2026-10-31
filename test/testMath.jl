@@ -11,9 +11,9 @@
     @test rescale(collect(0:10)) ≈ 0:0.1:1
     @test all(rescale((0:10...,)) .≈ ((0:0.1:1)...,))
 
-    @test rescale(0:10, -1, 0) ≈ -1:0.1:0
-    @test rescale(collect(0:10), -1, 0) ≈ -1:0.1:0
-    @test all(rescale((0:10...,), -1, 0) .≈ ((-1:0.1:0)...,))
+    @test rescale(10:20, -1, 0) ≈ -1:0.1:0
+    @test rescale(collect(10:20), -1, 0) ≈ -1:0.1:0
+    @test all(rescale((10:20...,), -1, 0) .≈ ((-1:0.1:0)...,))
 
     @test rescale(0:10, 20, 30) ≈ 20:30
     @test rescale(collect(0:10), 20, 30) ≈ 20:30

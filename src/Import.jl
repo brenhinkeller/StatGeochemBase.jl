@@ -565,9 +565,8 @@
             end
 
             # Process elements array
-            elements = stringvector(elements)
+            elements = copy(stringvector(elements))
             t = Bool[(!skipnameless || e !== "") for e in elements]
-            result["elements"] = elements[t]
 
             # Parse the input array, minus empty-named columns
             i₀ = firstindex(data) + skipstart
@@ -602,9 +601,7 @@
                     end
                 end
             end
-
-            # Return only unique elements, since dictionary keys must be unique
-            result["elements"] = unique(elements)
+            result["elements"] = unique(elements[t])
             return result
         elseif importas==:Tuple || importas==:tuple || importas==:NamedTuple
             # Import as NamedTuple (more efficient future default)
