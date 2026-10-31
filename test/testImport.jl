@@ -43,7 +43,7 @@ add = elementify(addtest, importas=:Dict, sumduplicates=true)
 ## --- Import / export functions
 
 @test exportdataset(datatuple, "tupledataset.csv", ',') === nothing
-@test importdataset("tupledataset.csv", importas=:Tuple) == datatuple
+@test importdataset("tupledataset.csv", importas=:Tuple, skipnameless=true) == datatuple
 @test importdataset("tupledataset.csv", ',', importas=:Tuple, elements=elements, skipstart=1) == datatuple
 @test importdataset("tupledataset.csv", ',', importas=:Tuple, elements=(elements...,), skipstart=1) == datatuple
 
@@ -126,10 +126,10 @@ renormalize!(datadict, datadict["elements"], total=100.)
 @test StatGeochemBase.symboltuple(("foo", "bar", "baz")) === (:foo, :bar, :baz)
 @test StatGeochemBase.symboltuple([:foo, :bar, :baz]) === (:foo, :bar, :baz)
 @test StatGeochemBase.symboltuple(["foo", "bar", "baz"]) === (:foo, :bar, :baz)
-@test StatGeochemBase.stringarray((:foo, :bar, :baz)) == ["foo", "bar", "baz"]
-@test StatGeochemBase.stringarray(("foo", "bar", "baz")) == ["foo", "bar", "baz"]
-@test StatGeochemBase.stringarray([:foo, :bar, :baz]) == ["foo", "bar", "baz"]
-@test StatGeochemBase.stringarray(["foo", "bar", "baz"]) == ["foo", "bar", "baz"]
+@test StatGeochemBase.stringvector((:foo, :bar, :baz)) == ["foo", "bar", "baz"]
+@test StatGeochemBase.stringvector(("foo", "bar", "baz")) == ["foo", "bar", "baz"]
+@test StatGeochemBase.stringvector([:foo, :bar, :baz]) == ["foo", "bar", "baz"]
+@test StatGeochemBase.stringvector(["foo", "bar", "baz"]) == ["foo", "bar", "baz"]
 
 @test isequal(StatGeochemBase.emptys(Any,3), [missing, missing, missing])
 @test isequal(StatGeochemBase.emptys(String,3), ["", "", ""])

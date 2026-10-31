@@ -447,10 +447,9 @@
     symboltuple(x::NTuple{N}) where {N} = ntuple(i->Symbol(x[i]), N)
     symboltuple(x) = ((Symbol(s) for s in x)...,)
 
-    stringarray(x::Vector{String}) = x
-    stringarray(x::NTuple{N, String}) where {N} = [s for s in x]
-    stringarray(x) = [String(s) for s in x]
-
+    stringvector(x::Array{String}) = vec(x)
+    stringvector(x::NTuple{N, String}) where {N} = [s for s in x]
+    stringvector(x) = vec([String(s) for s in x])
 
     """
     ```julia
@@ -566,15 +565,13 @@
             end
 
             # Process elements array
-            elements = stringarray(elements)
-            if skipnameless
-                elements = filter(!isempty, elements)
-            end
-            result["elements"] = isa(elements, Vector) ? elements : collect(elements)
+            elements = stringvector(elements)
+            t = Bool[(!skipnameless || e !== "") for e in elements]
+            result["elements"] = elements[t]
 
             # Parse the input array, minus empty-named columns
             i₀ = firstindex(data) + skipstart
-            for j ∈ eachindex(elements)
+            for j ∈ findall(t)
                 if skipstart == size(data,1)-1
                     column = data[end,j]
                 else
@@ -611,7 +608,7 @@
             return result
         elseif importas==:Tuple || importas==:tuple || importas==:NamedTuple
             # Import as NamedTuple (more efficient future default)
-            t = Bool[(skipnameless && e !== "") for e in elements]
+            t = Bool[(!skipnameless || e !== "") for e in elements]
             elements = sanitizevarname.(elements[t])
             i₀ = firstindex(data) + skipstart
             values = (columnformat(data[i₀:end, j], standardize, floattype) for j in findall(vec(t)))
@@ -658,7 +655,7 @@
 
         # Find the elements in the input dict if they exist and aren't otherwise specified
         if any(elements .== "elements")
-            elements = stringarray(dataset["elements"])
+            elements = stringvector(dataset["elements"])
         end
 
         # Figure out how many are numeric (if necessary), so we can export only
