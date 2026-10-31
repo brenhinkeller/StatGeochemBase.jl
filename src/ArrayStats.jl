@@ -299,19 +299,19 @@
             𝔦ₛ = searchsortedfirst(haystack, needle)
             𝔦₊ = min(𝔦ₛ, lastindex(haystack))
             𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-            index = if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) > abs(haystack[𝔦₋]-needle) 
-                𝔦₋
+            if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) >= abs(haystack[𝔦₋]-needle) 
+                return 𝔦₋
             else
-                𝔦₊
+                return 𝔦₊
             end
         elseif issorted(haystack, rev=true)
             𝔦ₛ = searchsortedfirst(haystack, needle, rev=true)
             𝔦₊ = min(𝔦ₛ, lastindex(haystack))
             𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-            index = if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) > abs(haystack[𝔦₋]-needle) 
-                𝔦₋
+            if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) >= abs(haystack[𝔦₋]-needle) 
+                return 𝔦₋
             else
-                𝔦₊
+                return 𝔦₊
             end
         else
             δ = abs(first(haystack) - needle)
@@ -323,8 +323,8 @@
                     index = j
                 end
             end
+            return index
         end
-        return index
     end
     findclosest(needles::Collection, haystack::Collection) = findclosest!(fill(0, length(needles)), needles, haystack)
     function findclosest!(index::DenseArray, needles, haystack)
@@ -335,7 +335,7 @@
                 𝔦ₛ = searchsortedfirst(haystack, needles[i])
                 𝔦₊ = min(𝔦ₛ, lastindex(haystack))
                 𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) > abs(haystack[𝔦₋]-needles[i]) 
+                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) >= abs(haystack[𝔦₋]-needles[i]) 
                     index[i] = 𝔦₋
                 else
                     index[i] = 𝔦₊
@@ -346,7 +346,7 @@
                 𝔦ₛ = searchsortedfirst(haystack, needles[i], rev=true)
                 𝔦₊ = min(𝔦ₛ, lastindex(haystack))
                 𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) > abs(haystack[𝔦₋]-needles[i]) 
+                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) >= abs(haystack[𝔦₋]-needles[i]) 
                     index[i] = 𝔦₋
                 else
                     index[i] = 𝔦₊
