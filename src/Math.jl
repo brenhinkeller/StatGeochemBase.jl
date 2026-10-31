@@ -509,7 +509,7 @@
     This is itself just another Normal distribution! Specifically, one with
     variance σ1^2 + σ2^2, evaluated at distance |μ1-μ2| from the mean
     """
-    normproduct(μ1, σ1, μ2, σ2) = normpdf(μ1, sqrt.(σ1.*σ1 + σ2.*σ2), μ2)
+    normproduct(μ1, σ1, μ2, σ2) = normpdf(μ1, @.(sqrt(σ1*σ1 + σ2*σ2)), μ2)
     export normproduct
 
     """
@@ -520,7 +520,7 @@
     As `normlogproduct`, but using the fast log likelihood of a Normal distribution
     (i.e., without the preexponential terms).
     """
-    normproduct_ll(μ1, σ1, μ2, σ2) = normpdf_ll(μ1, sqrt.(σ1.*σ1 + σ2.*σ2), μ2)
+    normproduct_ll(μ1, σ1, μ2, σ2) = normpdf_ll(μ1, @.(sqrt(σ1*σ1 + σ2*σ2)), μ2)
     export normproduct_ll
 
     """
@@ -529,7 +529,7 @@
     ```
     The logarithm of the integral of N[μ1,σ1] * N[μ2,σ2]
     """
-    normlogproduct(μ1, σ1, μ2, σ2) = normlogpdf(μ1, sqrt.(σ1.*σ1 + σ2.*σ2), μ2)
+    normlogproduct(μ1, σ1, μ2, σ2) = normlogpdf(μ1, @.(sqrt(σ1*σ1 + σ2*σ2)), μ2)
     export normlogproduct
 
 
