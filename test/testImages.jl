@@ -58,7 +58,12 @@
    @test isa(img2, AbstractArray{<:Color,2})
    @test all(img1 .== img2)
 
-   # Other
-   #@test display(colormaps) != NaN
+   # Zero range
+   matrix = ones(10,10)
+   img1 = imsc(matrix, viridis)
+   @test isa(img1, Array{<:Color,2})
+   img2 = imsci(matrix, viridis)
+   @test isa(img2, AbstractArray{<:Color,2})
+   @test all(img1 .== img2)
 
 ## ---

@@ -219,8 +219,13 @@
     """
     function imsc(A::AbstractArray, colormap::AbstractVector=viridis, cmin=nanminimum(A), cmax=nanmaximum(A))
         Nc = length(colormap)
+        @assert eachindex(colormap) == Base.OneTo(Nc)
         crange = cmax - cmin
-        return  A .|> x -> colormap[isnan(x) ? 1 : ceil(UInt, min(max(Nc*(x-cmin)/crange, 1), Nc))]
+        if crange == 0 || isnan(crange)
+            return  A .|> x -> colormap[x > cmin ? Nc : 1]
+        else
+            return  A .|> x -> colormap[isnan(x) ? 1 : ceil(UInt, clamp(Nc*(x-cmin)/crange, 1, Nc))]
+        end
     end
     export imsc
 
@@ -254,10 +259,15 @@
     julia> using Plots; plot(0:3, 0:3, img) # Plot with specified x and y axes
     ```
     """
-    function imsci(A::AbstractArray,colormap::AbstractArray=viridis,cmin::Number=nanminimum(A),cmax::Number=nanmaximum(A))
+    function imsci(A::AbstractArray, colormap::AbstractArray=viridis, cmin::Number=nanminimum(A), cmax::Number=nanmaximum(A))
         Nc = length(colormap)
+        @assert eachindex(colormap) == Base.OneTo(Nc)
         crange = cmax - cmin
-        return IndirectArray(A .|> x -> isnan(x) ? 1 : ceil(UInt, min(max(Nc*(x-cmin)/crange, 1), Nc)), colormap)
+        if crange == 0 || isnan(crange)
+            return  IndirectArray(A .|> x -> x > cmin ? Nc : 1, colormap)
+        else
+            return  IndirectArray(A .|> x -> isnan(x) ? 1 : ceil(UInt, clamp(Nc*(x-cmin)/crange, 1, Nc)), colormap)
+        end
     end
     export imsci
 

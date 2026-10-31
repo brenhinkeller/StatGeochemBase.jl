@@ -33,8 +33,8 @@
     @test findclosest(-1, 10:-1:1) == 10
     @test findclosest(11, 10:-1:1) == 1
     @test findclosest(3.6, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == 7
-    @test findclosest(-1, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1, 1]) == 10
-    @test findclosest(11, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1, 1]) == 1
+    @test findclosest(-1, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1, 1, 1]) == 10
+    @test findclosest(11, [10, 3, 8, 6, 9, 2, 4, 7, 5, 1, 1, 1]) == 1
     @test findclosest(3.3:5.3, 1:10) == 3:5
     @test findclosest(3.3:5.3, 10:-1:1) == 8:-1:6
     @test findclosest(3.3:5.3, [10, 3, 3, 8, 6, 9, 2, 4, 7, 5, 1]) == [2,8,10]
