@@ -50,9 +50,10 @@
     function delim_string_parse!(result::Array, str::AbstractString, delim::Char, T::Type=eltype(result); offset::Integer=0, merge::Bool=false, undefval=NaN)
 
         # Ignore initial delimiter
+        # N.B. positions are codeunit indices, so step with `nextind`/`prevind` rather than ±1
         last_delim_pos = 0
-        if ~isempty(str) && first(str) == delim
-            last_delim_pos = 1
+        if !isempty(str) && first(str) == delim
+            last_delim_pos = firstindex(str)
         end
 
         # Cycle through string parsing text betweeen delims
@@ -62,12 +63,9 @@
             for i ∈ eachindex(str)
                 if str[i] == delim
                     delim_pos = i
-                    if delim_pos > last_delim_pos+1
+                    if delim_pos > nextind(str, last_delim_pos)
                         n += 1
-                        parsed = nothing
-                        if delim_pos > last_delim_pos+1
-                            parsed = tryparse(T, str[(last_delim_pos+1):(delim_pos-1)])
-                        end
+                        parsed = tryparse(T, SubString(str, nextind(str, last_delim_pos), prevind(str, delim_pos)))
                         result[n] = isnothing(parsed) ? T(undefval) : parsed
                     end
                     last_delim_pos = delim_pos
@@ -80,8 +78,8 @@
                     if delim_pos > last_delim_pos
                         n += 1
                         parsed = nothing
-                        if delim_pos > last_delim_pos+1
-                            parsed = tryparse(T, str[(last_delim_pos+1):(delim_pos-1)])
+                        if delim_pos > nextind(str, last_delim_pos)
+                            parsed = tryparse(T, SubString(str, nextind(str, last_delim_pos), prevind(str, delim_pos)))
                         end
                         result[n] = isnothing(parsed) ? T(undefval) : parsed
                         last_delim_pos = delim_pos
@@ -91,9 +89,9 @@
         end
 
         # Check for final value after last delim
-        if length(str) > last_delim_pos
+        if lastindex(str) > last_delim_pos
             n += 1
-            parsed = tryparse(T, str[(last_delim_pos+1):length(str)])
+            parsed = tryparse(T, SubString(str, nextind(str, last_delim_pos), lastindex(str)))
             result[n] = isnothing(parsed) ? T(undefval) : parsed
         end
 
@@ -136,8 +134,8 @@
     """
     function delim_string_parse(str::AbstractString, delim::Char, T::Type=Float64; merge::Bool=false, undefval=NaN)
 
-        # Allocate an array to hold our parsed results
-        result = Array{T}(undef,ceil(Int,length(str)/2))
+        # Allocate an array to hold our parsed results (at most one more than the number of delimiters)
+        result = Array{T}(undef, count(isequal(delim), str)+1)
 
         # Parse the string
         n = delim_string_parse!(result, str, delim, T; merge=merge, undefval=undefval)
@@ -180,9 +178,10 @@
         result = Array{T}(undef,ceil(Int,ndelims))
 
         # Ignore initial delimiter
+        # N.B. positions are codeunit indices, so step with `nextind`/`prevind` rather than ±1
         last_delim_pos = 0
-        if first(str) == delim
-            last_delim_pos = 1
+        if !isempty(str) && first(str) == delim
+            last_delim_pos = firstindex(str)
         end
 
         # Cycle through string parsing text betweeen delims
@@ -192,11 +191,9 @@
             for i ∈ eachindex(str)
                 if str[i] == delim
                     delim_pos = i
-                    if delim_pos > last_delim_pos+1
+                    if delim_pos > nextind(str, last_delim_pos)
                         n += 1
-                        if delim_pos > last_delim_pos+1
-                            result[n] = f(str[(last_delim_pos+1):(delim_pos-1)])
-                        end
+                        result[n] = f(str[nextind(str, last_delim_pos):prevind(str, delim_pos)])
                     end
                     last_delim_pos = delim_pos
                 end
@@ -207,8 +204,8 @@
                     delim_pos = i
                     if delim_pos > last_delim_pos
                         n += 1
-                        if delim_pos > last_delim_pos+1
-                            result[n] = f(str[(last_delim_pos+1):(delim_pos-1)])
+                        if delim_pos > nextind(str, last_delim_pos)
+                            result[n] = f(str[nextind(str, last_delim_pos):prevind(str, delim_pos)])
                         end
                         last_delim_pos = delim_pos
                     end
@@ -217,9 +214,9 @@
         end
 
         # Check for final value after last delim
-        if length(str)>last_delim_pos
+        if lastindex(str) > last_delim_pos
             n += 1
-            result[n] = f(str[(last_delim_pos+1):length(str)])
+            result[n] = f(str[nextind(str, last_delim_pos):lastindex(str)])
         end
 
         # Return the result values
@@ -268,45 +265,45 @@
     		end
     		cₗ = c
     	end
-    	# If the last line isn't blank, add one more to the row counter
-    	(cₗ != rowdelimiter) && (maxrows += 1)
+    	# If the last line isn't blank, count it as well
+    	if cₗ != rowdelimiter
+    		maxrows += 1
+    		numcolumns += 1
+    		(numcolumns > maxcolumns) && (maxcolumns = numcolumns)
+    	end
 
     	# Allocate space for the imported array and fill with emptyval
     	parsedmatrix = emptys(T, maxrows, maxcolumns)
 
-        maxchars = length(str)
-    	kₗ = kₙ = firstindex(str) # Last and next delimiter position
-    	@inbounds for i = 1:maxrows
-    		for j = 1:maxcolumns
-                c = str[kₙ]
-    			while (kₙ < maxchars) && (c !== delimiter) && (c !== rowdelimiter)
-    				kₙ = nextind(str, kₙ)
-                    c = str[kₙ]
+        # Scan through the string, parsing each field as we reach the delimiter that ends it.
+        # Fields and delimiters are counted exactly as above, so `i` and `j` stay in bounds
+        i = j = 1               # Current row and column
+        kₗ = firstindex(str)    # Start of current field
+    	cₗ = rowdelimiter
+    	for k in eachindex(str)
+    		c = str[k]
+    		if c == delimiter && merge && cₗ == delimiter
+    			# Repeated delimiter: skip over it
+    			kₗ = nextind(str, k)
+    		elseif c == delimiter || c == rowdelimiter
+    			if k > kₗ
+    				parsed = tryparse(T, SubString(str, kₗ, prevind(str, k)))
+    				isnothing(parsed) || (parsedmatrix[i,j] = parsed)
     			end
-
-                if kₙ>kₗ
-                    # Parse the string
-                    k = (c===delimiter || c===rowdelimiter) ? prevind(str,kₙ) : kₙ
-        			parsed = tryparse(T, str[kₗ:k])
-        			isnothing(parsed) || (parsedmatrix[i,j] = parsed)
-                end
-
-                # If we're at the end of the string, we're done
-                (kₙ == maxchars) && break
-
-                # Step over any delimiter(s)
-                kₗ = kₙ = nextind(str, kₙ)
-                if merge
-                    while str[kₙ] == delimiter
-                        kₗ = kₙ = nextind(str, kₙ)
-                    end                    
-                end
-
-                # If we've hit a row delimiter, move to next row
-                (c == rowdelimiter) && break
+    			if c == rowdelimiter
+    				i += 1
+    				j = 1
+    			else
+    				j += 1
+    			end
+    			kₗ = nextind(str, k)
     		end
-            # If we're at the end of the string, we're done
-            (kₙ == maxchars) && break
+    		cₗ = c
+    	end
+    	# Parse final field, if the string doesn't end with a delimiter
+    	if kₗ <= lastindex(str)
+    		parsed = tryparse(T, SubString(str, kₗ, lastindex(str)))
+    		isnothing(parsed) || (parsedmatrix[i,j] = parsed)
     	end
     	return parsedmatrix
     end
@@ -834,10 +831,10 @@
     end
     # Vertically concatenate the fields `e` (if present) of two named tuples
     function vcombine(d1, d2, e, s1=size(d1[first(keys(d1))]), s2=size(d2[first(keys(d2))]))
-        if haskey(d1,e) && ~haskey(d2,e)
+        if haskey(d1,e) && !haskey(d2,e)
             T = eltype(d1[e])
             vcat(d1[e], emptys(T, s2))
-        elseif ~haskey(d1,e) && haskey(d2,e)
+        elseif !haskey(d1,e) && haskey(d2,e)
             T = eltype(d2[e])
             vcat(emptys(T, s1), d2[e])
         else
@@ -1025,7 +1022,7 @@
         close(io)
         # Exclude rows with fewer than `mindefinedcolumns` columns
         if mindefinedcolumns > 0
-            definedcolumns = vec(sum(.~ isempty.(data), dims=2))
+            definedcolumns = vec(sum(.!isempty.(data), dims=2))
             t = definedcolumns .>= mindefinedcolumns
             data = data[t,:]
         end

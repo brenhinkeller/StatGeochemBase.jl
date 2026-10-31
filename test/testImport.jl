@@ -7,6 +7,22 @@
 @test parsedlm("1,2,,3\n4,,,,5,,6\n7,,,8,,,9\n", ',', Float64, merge=true) == reshape(1:9,3,3)'
 @test parsedlm("1,2,3,,4\n5,6,7,8\n9,10,11,,,,12\n13,,,,14,15,16", ',', Int64, merge=true) == reshape(1:16,4,4)'
 @test isequal(parsedlm("1,2,,3\n4,5,6,,,,,\n7,8,9,,\n", ',', Float64, merge=true), [1.0 2.0 3.0 NaN; 4.0 5.0 6.0 NaN; 7.0 8.0 9.0 NaN])
+@test parsedlm("1,2\n3,4", ',', Float64) == [1 2; 3 4]
+@test isequal(parsedlm("1,2\n3,4,5", ',', Float64), [1 2 NaN; 3 4 5])
+@test parsedlm("1,2,3", ',', Float64) == [1 2 3]
+@test parsedlm("1,2,", ',', Float64, merge=true)[1:2] == [1, 2]
+@test isequal(parsedlm("α,1\n2,3", ',', Float64), [NaN 1; 2 3])
+@test parsedlm("1│2\n3│4", '│', Float64) == [1 2; 3 4]
+@test size(parsedlm("", ',', Float64)) == (0, 0)
+
+@test delim_string_parse("1,2,3", ',', Float64) == [1, 2, 3]
+@test isequal(delim_string_parse("1,,,,", ',', Float64), [1, NaN, NaN, NaN])
+@test isequal(delim_string_parse("μ,μ,5", ',', Float64), [NaN, NaN, 5])
+@test isequal(delim_string_parse("1μ,2", ',', Float64), [NaN, 2])
+@test delim_string_parse("1│2││3", '│', Float64, merge=true) == [1, 2, 3]
+@test delim_string_parse("", ',', Float64) == Float64[]
+@test delim_string_function(identity, "α,β,γ", ',', String) == ["α", "β", "γ"]
+@test delim_string_function(identity, "", ',', String) == String[]
 
 A = delim_string_function(x -> delim_string_parse(x, ',', Float32),
     "1,2,3,4\n5,6,7,8\n9,10,11,12\n13,14,15,16", '\n', Array{Float32,1})
