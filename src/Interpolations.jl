@@ -52,7 +52,12 @@
         λ = step(v)
         δ = first(v)/λ - lo
         @inbounds for i ∈ eachindex(x, ix)
-            ix[i] = min(max(ceil(Int, x[i]/λ - δ), lo), hi)
+            ixᵢ = x[i]/λ - δ
+            if ixᵢ < hi
+                ix[i] = max(ceil(Int, ixᵢ), lo)
+            else
+                ix[i] = hi
+            end
         end
         return ix
     end
@@ -61,15 +66,23 @@
         hi = lastindex(v) + 1
         δ = first(v) - lo
         @inbounds for i ∈ eachindex(x, ix)
-            ix[i] = min(max(ceil(Int, x[i] - δ), lo), hi)
+            ixᵢ = x[i] - δ
+            if ixᵢ < hi
+                ix[i] = max(ceil(Int, ixᵢ), lo)
+            else
+                ix[i] = hi
+            end
         end
         return ix
     end
     function searchsortedfirst_vec!(ix::StridedVector, v::Base.OneTo, x::AbstractVector)
-        lo = firstindex(v)
         hi = lastindex(v) + 1
         @inbounds for i ∈ eachindex(x, ix)
-            ix[i] = min(max(ceil(Int, x[i]), lo), hi)
+            if x[i] < hi
+                ix[i] = max(ceil(Int, x[i]), 1)
+            else
+                ix[i] = hi
+            end
         end
         return ix
     end

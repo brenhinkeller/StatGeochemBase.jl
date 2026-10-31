@@ -153,7 +153,7 @@
                 A[n], A[i] = A[i], A[n]
             end
         end
-        return n
+        return n - firstindex(A) + 1
     end
     export count_unique!
 
@@ -555,7 +555,7 @@
     ```julia
     findnth(t::Collection{Bool}, n::Integer)
     ```
-    Return the index of the `n`th true value of `t`, else length(`t`)
+    Return the index of the `n`th true value of `t`, else `lastindex(t)+1`
 
     ### Examples
     ```julia
@@ -572,16 +572,14 @@
     ```
     """
     function findnth(t::Collection{Bool}, n::Integer)
-        N = 0
+        c = 0
         @inbounds for i ∈ eachindex(t)
             if t[i]
-                N += 1
+                c += 1
             end
-            if N == n
-                return i
-            end
+            c == n && return i
         end
-        return length(t)
+        return lastindex(t)+1
     end
     export findnth
 

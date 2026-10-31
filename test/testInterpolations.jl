@@ -98,7 +98,7 @@
     # Test non-unit step in x range
     @test linterp1!(similar(xq), (1:10)./10, 1:10, xq./10, interpolate=:linear, extrapolate=NaN) ≈ [NaN; 1.5:9.5; NaN]  nans=true
     @test linterp1!(similar(xq), (1.5:10.5)./10, 1:10, xq./10, interpolate=:nearest, extrapolate=NaN) ≈ [NaN; 1:10]  nans=true
-    @test isequal(linterp1!(zeros(3), 0:0.5:2, [0,1,2,3,4.], [0.5,1.0,1.75], extrapolate=NaN), [1.0, 2.0, 3.5])
+    @test isequal(linterp1!(zeros(5), 0:0.5:2, [0,1,2,3,4.], [0.5,1,1.75,2,NaN], extrapolate=NaN), [1.0, 2.0, 3.5, 4, NaN])
 
     # Test consistency of sorting against Base
     x = rand(50)*10

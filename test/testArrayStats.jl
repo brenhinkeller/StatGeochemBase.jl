@@ -19,7 +19,10 @@
     # Sorting, counting, matching
     A = rand(1:100., 100); B = sort(A)
     @test A[1:count_unique!(A)] == unique(B)
+    @test findnth(fill(true, 50), 1) == 1
     @test findnth(fill(true, 50), 25) == 25
+    @test findnth(fill(true, 50), 60) == 51
+    @test findnth(fill(false, 50), 1) == 51
     @test findmatches(40:60, 1:100) == 40:60
     @test findmatches(50, 1:100) == 50
 
