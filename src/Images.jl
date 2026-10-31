@@ -147,9 +147,9 @@
             y .+= firstindex(yq)
             for i in Base.OneTo(npoints-1)
                 Δx = x[i+1] - x[i]
-                isnan(Δx) && break
+                isnan(Δx) && continue
                 Δy = y[i+1] - y[i]
-                isnan(Δy) && break
+                isnan(Δy) && continue
                 s = Δy/Δx
                 if abs(s) > 1
                     # Steep line
