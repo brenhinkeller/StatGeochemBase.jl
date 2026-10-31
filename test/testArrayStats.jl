@@ -122,6 +122,6 @@
     @test nanmean(ydist) ≈ 1 atol=0.1
     @test nanstd(xdist) ≈ 0.5 atol=0.15
     @test nanstd(ydist) ≈ 0.5 atol=0.15
-    @test nanmean(acceptancedist) ≈ 0.32 atol=0.2
+    @test nanmean(acceptancedist) ≈ 0.56569 atol=0.2
 
 ## ---

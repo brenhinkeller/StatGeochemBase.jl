@@ -817,10 +817,12 @@
 
         # Burn-in
         for _ in 1:burnin
+            # Reset proposals
+            x_prop, y_prop = x, y
             if rand() < 0.5
-                x_prop = x + randn()*σx
+                x_prop += randn()*σx
             else
-                y_prop = y + randn()*σy
+                y_prop += randn()*σy
             end
             ll_prop = linterp2(xaxis, yaxis, llmatrix, x_prop, y_prop, extrapolate=NaN)
             if log(rand()) < (ll_prop - ll)
@@ -834,10 +836,12 @@
 
         # Collect stationary distribution
         for i in eachindex(xdist, ydist)
+            # Reset proposals
+            x_prop, y_prop = x, y
             if rand() < 0.5
-                x_prop = x + randn()*σx
+                x_prop += randn()*σx
             else
-                y_prop = y + randn()*σy
+                y_prop += randn()*σy
             end
             ll_prop = linterp2(xaxis, yaxis, llmatrix, x_prop, y_prop, extrapolate=NaN)
             if log(rand()) < (ll_prop - ll)
