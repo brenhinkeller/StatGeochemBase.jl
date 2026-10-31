@@ -178,28 +178,22 @@
     ```
     """
     function rescale(y::AbstractArray, min::Number=0, max::Number=1)
-        obsmin = nanminimum(y)
+        obsmin, obsmax = nanextrema(y)
         y = float.(y) .- obsmin
-        obsmax = nanmaximum(y)
-        y ./= obsmax
-        y .+= min
-        y .*= (max-min)
+        y .*= (max - min) / obsmax
+        return y .+= min
     end
     function rescale(y::AbstractRange, min::Number=0, max::Number=1)
-        obsmin = minimum(y)
+        obsmin, obsmax = nanextrema(y)
         y = float(y) .- obsmin
-        obsmax = maximum(y)
-        y = y ./ obsmax
-        y = y .+ min
-        y = y .* (max-min)
+        y = y .* ((max-min) / obsmax)
+        return y .+ min
     end
     function rescale(y, min::Number=0, max::Number=1)
-        obsmin = nanminimum(y)
+        obsmin, obsmax = nanextrema(y)
         y = float.(y) .- obsmin
-        obsmax = nanmaximum(y)
-        y = y ./ obsmax
-        y = y .+ min
-        y = y .* (max-min)
+        y = y .* ((max-min) / obsmax)
+        return y .+ min
     end
     export rescale
 

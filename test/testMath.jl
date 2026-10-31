@@ -15,6 +15,10 @@
     @test rescale(collect(0:10), -1, 0) ≈ -1:0.1:0
     @test all(rescale((0:10...,), -1, 0) .≈ ((-1:0.1:0)...,))
 
+    @test rescale(0:10, 20, 30) ≈ 20:30
+    @test rescale(collect(0:10), 20, 30) ≈ 20:30
+    @test all(rescale((0:10...,), 20, 30) .≈ ((20:30)...,))
+
 ## --- Significant figures
 
     @test sigdigits(1/3) === 16

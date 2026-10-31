@@ -854,7 +854,7 @@
 
 ## --- Hashing of imported datasets
 
-    function rescale(x::Number, digits::Integer=1)
+    function rescaleto(x::Number, digits::Integer=1)
         n = if isfinite(x) && !iszero(x)
             -(floor(Int, log10(abs(x)))-digits+1)
         else
@@ -865,7 +865,7 @@
 
     prehash(x, digits::Integer) = hash(x)
     prehash(x::Number, digits::Integer) = prehash(Float64(x), digits)
-    prehash(x::Float64, digits::Integer) = reinterpret(UInt64, rescale(x, digits))
+    prehash(x::Float64, digits::Integer) = reinterpret(UInt64, rescaleto(x, digits))
 
 
     """
