@@ -49,10 +49,10 @@
     function searchsortedfirst_vec!(ix::StridedVector, v::AbstractRange, x::AbstractVector)
         lo = firstindex(v)
         hi = lastindex(v) + 1
-        δ = first(v) - lo
         λ = step(v)
+        δ = first(v)/λ - lo
         @inbounds for i ∈ eachindex(x, ix)
-            ix[i] = min(max(ceil(Int, (x[i] - δ)/λ), lo), hi)
+            ix[i] = min(max(ceil(Int, x[i]/λ - δ), lo), hi)
         end
         return ix
     end
