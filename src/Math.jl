@@ -758,16 +758,15 @@
 
         thetamin = fill(NaN, size(latᵢ))
         @inbounds for i in eachindex(latᵢ)
-            for j in eachindex(lon)
-                arg = sli[i] * sl[j] + cli[i] * cl[j] * cos((lonᵢ[i] - lon[j]) * pi/180)
-                if arg < -1
-                    arg = -1.0
-                elseif arg > 1
-                    arg = 1.0
-                end
-                θᵢⱼ = 180/pi * acos(arg)
-                if !(θᵢⱼ >= thetamin[i])
-                    thetamin[i] = θᵢⱼ
+            if latᵢ[i]==latᵢ[i] && lonᵢ[i]==lonᵢ[i]
+                for j in eachindex(lon)
+                    if lat[j]==lat[j] && lon[j]==lon[j]
+                        arg = sli[i] * sl[j] + cli[i] * cl[j] * cos((lonᵢ[i] - lon[j]) * pi/180)
+                        θᵢⱼ = 180/pi * acos(clamp(arg, -1.0, 1.0))
+                        if !(θᵢⱼ >= thetamin[i])
+                            thetamin[i] = θᵢⱼ
+                        end
+                    end
                 end
             end
         end
