@@ -108,7 +108,7 @@
     end
     Base.@propagate_inbounds function _linterp1(x, y, xq::Number, ::StaticSymbol{:linear})
         knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
-        𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
+        𝔦₊ = clamp(knot_index, firstindex(x)+1, lastindex(x))
         𝔦₋ = 𝔦₊ - 1
         x₋, x₊ = x[𝔦₋], x[𝔦₊]
         f = (xq - x₋) / (x₊ - x₋)
@@ -116,7 +116,7 @@
     end
     Base.@propagate_inbounds function _linterp1(x, y, xq::Number, ::StaticSymbol{:nearest})
         knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
-        𝔦₊ = min(max(knot_index, firstindex(x)+1), lastindex(x))
+        𝔦₊ = clamp(knot_index, firstindex(x)+1, lastindex(x))
         𝔦₋ = 𝔦₊ - 1
         x₋, x₊ = x[𝔦₋], x[𝔦₊]
         f = (xq - x₋) / (x₊ - x₋)
@@ -189,7 +189,7 @@
         i₁, iₙ = firstindex(x)+1, lastindex(x)
         searchsortedfirst_vec!(knot_index, x, xq)
         @inbounds @fastmath for i ∈ eachindex(knot_index)
-            𝔦₊ = min(max(knot_index[i], i₁), iₙ)
+            𝔦₊ = clamp(knot_index[i], i₁, iₙ)
             𝔦₋ = 𝔦₊ - 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
             f = (xq[i] - x₋)/(x₊ - x₋)
@@ -202,7 +202,7 @@
         i₁, iₙ = firstindex(x)+1, lastindex(x)
         searchsortedfirst_vec!(knot_index, x, xq)
         @inbounds @fastmath for i ∈ eachindex(knot_index)
-            𝔦₊ = min(max(knot_index[i], i₁), iₙ)
+            𝔦₊ = clamp(knot_index[i], i₁, iₙ)
             𝔦₋ = 𝔦₊ - 1
             x₋, x₊ = x[𝔦₋], x[𝔦₊]
             f = (xq[i] - x₋)/(x₊ - x₋)
@@ -365,11 +365,11 @@
     end
     Base.@propagate_inbounds function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, ::StaticSymbol{:nearest})
         x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
-        i₊x = min(max(x_knot_index, firstindex(x)+1), lastindex(x))
+        i₊x = clamp(x_knot_index, firstindex(x)+1, lastindex(x))
         i₋x = i₊x - 1
         x₋, x₊ = x[i₋x], x[i₊x]
         y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) 
-        i₊y = min(max(y_knot_index, firstindex(y)+1), lastindex(y))
+        i₊y = clamp(y_knot_index, firstindex(y)+1, lastindex(y))
         i₋y = i₊y - 1
         y₋, y₊ = y[i₋y], y[i₊y]
         fx = (xq - x₋) / (x₊ - x₋)
@@ -391,11 +391,11 @@
     end
     Base.@propagate_inbounds function _linterp2(x, y, z::AbstractMatrix, xq::Number, yq::Number, ::StaticSymbol{:bilinear})
         x_knot_index = searchsortedfirst(x, xq, Base.Order.ForwardOrdering())
-        i₊x = min(max(x_knot_index, firstindex(x)+1), lastindex(x))
+        i₊x = clamp(x_knot_index, firstindex(x)+1, lastindex(x))
         i₋x = i₊x - 1
         x₋, x₊ = x[i₋x], x[i₊x]
         y_knot_index = searchsortedfirst(y, yq, Base.Order.ForwardOrdering()) 
-        i₊y = min(max(y_knot_index, firstindex(y)+1), lastindex(y))
+        i₊y = clamp(y_knot_index, firstindex(y)+1, lastindex(y))
         i₋y = i₊y - 1
         y₋, y₊ = y[i₋y], y[i₊y]
         z₋₋ = z[i₋y, i₋x]
