@@ -281,7 +281,7 @@
     ```
     Return the index of the numerically closest value in the indexable collection
     `haystack` for each value in `needles`.
-    If muliple values are equally close, the first one is used
+    If muliple values are equally close, the last one is used
 
     ### Examples
     ```julia
@@ -296,19 +296,19 @@
     """
     function findclosest(needle, haystack::Collection)
         if issorted(haystack)
-            𝔦ₛ = searchsortedfirst(haystack, needle)
-            𝔦₊ = min(𝔦ₛ, lastindex(haystack))
-            𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-            if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) >= abs(haystack[𝔦₋]-needle) 
+            𝔦ₛ = searchsortedlast(haystack, needle)
+            𝔦₊ = min(𝔦ₛ+1, lastindex(haystack))
+            𝔦₋ = max(𝔦ₛ, firstindex(haystack))
+            if (𝔦₊ != 𝔦₋) && abs(haystack[𝔦₊]-needle) > abs(haystack[𝔦₋]-needle) 
                 return 𝔦₋
             else
                 return 𝔦₊
             end
         elseif issorted(haystack, rev=true)
-            𝔦ₛ = searchsortedfirst(haystack, needle, rev=true)
-            𝔦₊ = min(𝔦ₛ, lastindex(haystack))
-            𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-            if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needle) >= abs(haystack[𝔦₋]-needle) 
+            𝔦ₛ = searchsortedlast(haystack, needle, rev=true)
+            𝔦₊ = min(𝔦ₛ+1, lastindex(haystack))
+            𝔦₋ = max(𝔦ₛ, firstindex(haystack))
+            if (𝔦₊ != 𝔦₋) && abs(haystack[𝔦₊]-needle) > abs(haystack[𝔦₋]-needle) 
                 return 𝔦₋
             else
                 return 𝔦₊
@@ -318,7 +318,7 @@
             index = firstindex(haystack)
             @inbounds for j ∈ Iterators.drop(eachindex(haystack),1)
                 δₚ = abs(haystack[j] - needle)
-                if δₚ < δ
+                if δₚ <= δ
                     δ = δₚ
                     index = j
                 end
@@ -332,10 +332,10 @@
         # Find closest (numerical) match in haystack for each value in needles
         if issorted(haystack)
             @inbounds for i ∈ eachindex(needles)
-                𝔦ₛ = searchsortedfirst(haystack, needles[i])
-                𝔦₊ = min(𝔦ₛ, lastindex(haystack))
-                𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) >= abs(haystack[𝔦₋]-needles[i]) 
+                𝔦ₛ = searchsortedlast(haystack, needles[i])
+                𝔦₊ = min(𝔦ₛ+1, lastindex(haystack))
+                𝔦₋ = max(𝔦ₛ, firstindex(haystack))
+                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) > abs(haystack[𝔦₋]-needles[i]) 
                     index[i] = 𝔦₋
                 else
                     index[i] = 𝔦₊
@@ -343,10 +343,10 @@
             end
         elseif issorted(haystack, rev=true)
             @inbounds for i ∈ eachindex(needles)
-                𝔦ₛ = searchsortedfirst(haystack, needles[i], rev=true)
-                𝔦₊ = min(𝔦ₛ, lastindex(haystack))
-                𝔦₋ = max(𝔦ₛ-1, firstindex(haystack))
-                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) >= abs(haystack[𝔦₋]-needles[i]) 
+                𝔦ₛ = searchsortedlast(haystack, needles[i], rev=true)
+                𝔦₊ = min(𝔦ₛ+1, lastindex(haystack))
+                𝔦₋ = max(𝔦ₛ, firstindex(haystack))
+                if 𝔦₊ != 𝔦₋ && abs(haystack[𝔦₊]-needles[i]) > abs(haystack[𝔦₋]-needles[i]) 
                     index[i] = 𝔦₋
                 else
                     index[i] = 𝔦₊
@@ -358,7 +358,7 @@
                 index[i] = firstindex(haystack)
                 for j ∈ Iterators.drop(eachindex(haystack),1)
                     δₚ = abs(haystack[j] - needles[i])
-                    if δₚ < δ
+                    if δₚ <= δ
                         δ = δₚ
                         index[i] = j
                     end
