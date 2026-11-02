@@ -938,17 +938,16 @@
 
 ## --- High-level import/export functions
 
-    function guessdelimiter(s::AbstractString)
-        if length(s)>3 
-            if s[end-3:end] == ".csv"
-                ','
-            elseif s[end-3:end] == ".tsv"
-                '\t'
-            elseif s[end-3:end] == ".psv"
-                '|'
-            else
-                '\t'
-            end
+    function guessdelimiter(file::AbstractString)
+        fl = lowercase(file)
+        if endswith(fl, ".csv")
+            ','
+        elseif endswith(fl, ".tsv")
+            '\t'
+        elseif endswith(fl, ".ssv")
+            ';'
+        elseif endswith(fl, ".psv")
+            '|'
         else
             '\t'
         end

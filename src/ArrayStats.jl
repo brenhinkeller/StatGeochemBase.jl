@@ -422,6 +422,7 @@
     end
     findclosestbelow(needles::Collection, haystack::Collection) = findclosestbelow!(fill(0, length(needles)), needles, haystack)
     function findclosestbelow!(index::DenseArray, needles, haystack)
+        @assert eachindex(index) == eachindex(needles)
         if issorted(haystack)
             @inbounds for i ∈ eachindex(needles)
                 index[i] = searchsortedfirst(haystack, needles[i]) - 1
@@ -512,6 +513,7 @@
     end
     findclosestabove(needles::Collection, haystack::Collection) = findclosestabove!(fill(0, length(needles)), needles, haystack)
     function findclosestabove!(index::DenseArray, needles, haystack)
+        @assert eachindex(index) == eachindex(needles)
         if issorted(haystack)
             @inbounds for i ∈ eachindex(needles)
                 index[i] = searchsortedlast(haystack, needles[i]) + 1

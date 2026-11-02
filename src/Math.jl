@@ -453,7 +453,7 @@
         return ll
     end
     function normcdf_ll!(mu::AbstractArray,sigma::AbstractArray,x::AbstractArray)
-        @inbounds for i ∈ eachindex(x,mu)
+        @inbounds for i ∈ eachindex(x,mu,sigma)
             xₛ = (x[i] - mu[i]) / sigma[i]
             x[i] = normcdf_ll(xₛ)
         end
