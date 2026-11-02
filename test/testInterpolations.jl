@@ -149,6 +149,27 @@
     linterp1s!(yqk, knot_index, x, y, xq, interpolate=:nearest)
     @test yqk ≈ linterp1(xs, yx, xq, interpolate=:nearest)
 
+    # Test handling of nans
+    x, y = [1,2,3,4,NaN], [1,2,3,4,NaN]
+    @test linterp1(x, y, 4, extrapolate=0) ≈ 4.
+    @test linterp1(x, y, 4.5, extrapolate=0) ≈ 0.
+    @test linterp1(x, y, [4], extrapolate=0) ≈ [4.]
+    @test linterp1(x, y, [4.5], extrapolate=0) ≈ [0.]
+    @test linterp1(x, y, [1,2,3,4,5.], extrapolate=0) ≈ [1,2,3,4,0.]
+    @test linterp1s(x, y, 4, extrapolate=0) ≈ 4.
+    @test linterp1s(x, y, 4.5, extrapolate=0) ≈ 0.
+    @test linterp1s(x, y, [4], extrapolate=0) ≈ [4.]
+    @test linterp1s(x, y, [4.5], extrapolate=0) ≈ [0.]
+    @test linterp1s(x, y, [1,2,3,4,5.], extrapolate=0) ≈ [1,2,3,4,0.]
+    @test linterp1s!(x, y, 4, extrapolate=0) ≈ 4.
+    @test linterp1s!(x, y, 4.5, extrapolate=0) ≈ 0.
+    @test linterp1s!(x, y, [4], extrapolate=0) ≈ [4.]
+    @test linterp1s!(x, y, [4.5], extrapolate=0) ≈ [0.]
+    @test linterp1s!(x, y, [1,2,3,4,5.], extrapolate=0) ≈ [1,2,3,4,0.]
+    @test linterp1s!(zeros(1), x, y, [4,], extrapolate=0) ≈ [4.]
+    @test linterp1s!(zeros(1), x, y, [4.5,], extrapolate=0) ≈ [0.]
+    @test linterp1s!(zeros(5), x, y, [1,2,3,4,5.], extrapolate=0) ≈ [1,2,3,4,0.]
+
 ## --- Test 2-D interpolations
 
     x = 1:3

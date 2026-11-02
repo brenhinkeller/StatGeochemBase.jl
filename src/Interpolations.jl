@@ -254,7 +254,13 @@
     function linterp1(x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
         @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
         @assert eachindex(x) == eachindex(y)
-        return _linterp1(x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        if any(isnan, x)
+            # If there are any NaNs in x, pass only a view of the non-NaN elements
+            i₋, i₊ = firstindex(x), findfirst(isnan, x)-1
+            return _linterp1(view(x, i₋:i₊), view(y, i₋:i₊), xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        else
+            return _linterp1(x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        end
     end
     export linterp1
 
@@ -266,17 +272,18 @@
 
     An optional temporary working array `knot_index = similar(xq, Int)` may be provided if desired for performance.
     """
-    function linterp1!(yq, x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
-        @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
-        @assert eachindex(x) == eachindex(y)
-        @assert eachindex(xq) == eachindex(yq)
-        return _linterp1k!(yq, similar(yq, Int), x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
-    end
+    linterp1!(yq, x, y, xq; interpolate=static(:linear), extrapolate=interpolate) = linterp1!(yq, similar(yq, Int), x, y, xq; interpolate, extrapolate)
     function linterp1!(yq, knot_index::StridedArray{Int}, x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
         @assert issorted(x) "knot-vector `x` must be sorted in increasing order"
         @assert eachindex(x) == eachindex(y)
         @assert eachindex(knot_index) == eachindex(xq) == eachindex(yq)
-        return _linterp1k!(yq, knot_index, x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        if any(isnan, x)
+            # If there are any NaNs in x, pass only a view of the non-NaN elements
+            i₋, i₊ = firstindex(x), findfirst(isnan, x)-1
+            return _linterp1k!(yq, knot_index, view(x, i₋:i₊), view(y, i₋:i₊), xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        else
+            return _linterp1k!(yq, knot_index, x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        end
     end
     export linterp1!
 
@@ -307,33 +314,26 @@
       0.5
     ```
     """
-    function linterp1s(x::AbstractArray, y::AbstractArray, xq; interpolate=static(:linear), extrapolate=interpolate)
-        @assert eachindex(x) == eachindex(y)
-        sI = sortperm(x) # indices to construct sorted array
-        return @inbounds _linterp1(x[sI], y[sI], xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
-    end
+    linterp1s(x::AbstractArray, y::AbstractArray, xq; interpolate=static(:linear), extrapolate=interpolate) = linterp1s!(collect(x), collect(y), xq; interpolate, extrapolate)
     export linterp1s
 
     """
     ```julia
-    linterp1s!(yq, [knot_index], x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
+    linterp1s!([yq], [knot_index], x, y, xq; interpolate=static(:linear), extrapolate=interpolate)
     ```
-    In-place variant of `linterp1s`.
-    Will sort `x` and permute `y` to match, before interpolating at `xq` and storing the result in `yq`.
+    In-place variants of `linterp1s`.
+    Will sort `x` and permute `y` to match, before interpolating at `xq` and storing the result in `yq`, if provided.
 
-    An optional temporary working array `knot_index = similar(xq, Int)` may be provided if desired for performance.
+    An optional temporary working array `knot_index = similar(xq, Int)` may also be provided if desired for performance.
     """
-    function linterp1s!(yq::StridedArray, x::StridedArray, y::StridedArray, xq; interpolate=static(:linear), extrapolate=interpolate)
-        @assert eachindex(x) == eachindex(y)
-        @assert eachindex(xq) == eachindex(yq)
+    function linterp1s!(x::AbstractArray, y::AbstractArray, xq; interpolate=static(:linear), extrapolate=interpolate)
         nanargsort!(y, x) # Sort x and permute y to match, in-place
-        return _linterp1k!(yq, similar(yq, Int), x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        return linterp1(x, y, xq; interpolate, extrapolate)
     end
+    linterp1s!(yq, x, y, xq; interpolate=static(:linear), extrapolate=interpolate) = linterp1s!(yq, similar(yq, Int), x, y, xq; interpolate, extrapolate)
     function linterp1s!(yq::StridedArray, knot_index::StridedArray{Int}, x::StridedArray, y::StridedArray, xq::AbstractArray; interpolate=static(:linear), extrapolate=interpolate)
-        @assert eachindex(x) == eachindex(y)
-        @assert eachindex(knot_index) == eachindex(yq) == eachindex(xq)
         nanargsort!(y, x) # Sort x and permute y to match, in-place
-        return _linterp1k!(yq, knot_index, x, y, xq, staticifsymbol(interpolate), staticifsymbol(extrapolate))
+        return linterp1!(yq, knot_index, x, y, xq; interpolate, extrapolate)
     end
     export linterp1s!
 
